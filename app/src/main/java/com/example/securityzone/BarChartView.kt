@@ -61,14 +61,14 @@ class BarChartView @JvmOverloads constructor(
 
                     // Dibuja el valor encima de la barra
                     paint.color = Color.WHITE
-                    paint.textSize = 30f
+                    paint.textSize = 35f
                     val valueText = value.toString()
                     val valueTextWidth = paint.measureText(valueText)
                     canvas.drawText(valueText, rectF.centerX() - valueTextWidth / 2, rectF.top - 10f, paint)
 
                     // Dibuja la etiqueta de la barra
                     paint.color = Color.WHITE
-                    paint.textSize = 20f
+                    paint.textSize = 35f
                     canvas.save()
                     canvas.rotate(-45f, (i + 1.5f) * barWidth, height.toFloat() - 10f)
                     canvas.drawText(labels[i], (i + 1.5f) * barWidth - paint.measureText(labels[i]) / 2, height.toFloat() - 10f, paint)
