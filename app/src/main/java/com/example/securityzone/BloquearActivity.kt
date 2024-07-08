@@ -19,6 +19,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.sql.Timestamp
 import java.util.Date
 import android.content.res.Configuration
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import java.util.Locale
 
 class BloquearActivity : AppCompatActivity() {
@@ -114,15 +116,20 @@ class BloquearActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.dialog_bloquear, null)
-        val editText = dialogLayout.findViewById<EditText>(R.id.editText)
+        val radioGroup = dialogLayout.findViewById<RadioGroup>(R.id.radioGroup)
 
         builder.setView(dialogLayout)
             .setTitle("Bloquear")
             .setPositiveButton("Confirmar") { _, _ ->
-                val inputText = editText.text.toString()
-                if (inputText.isNotEmpty()) {
+                val selectedOption = when (radioGroup.checkedRadioButtonId) {
+                    R.id.radioButton1 -> dialogLayout.findViewById<RadioButton>(R.id.radioButton1).text.toString()
+                    R.id.radioButton2 -> dialogLayout.findViewById<RadioButton>(R.id.radioButton2).text.toString()
+                    R.id.radioButton3 -> dialogLayout.findViewById<RadioButton>(R.id.radioButton3).text.toString()
+                    else -> ""
+                }
+                if (selectedOption.isNotEmpty()) {
                     preferencesManager.isBlocked = true
-                    readTxtField(inputText) { success ->
+                    readTxtField(selectedOption) { success ->
                         updateUI()
                         showSaveResult(success)
                     }
