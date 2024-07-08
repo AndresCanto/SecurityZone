@@ -1,5 +1,6 @@
 package com.example.securityzone
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
@@ -13,6 +14,8 @@ import java.util.*
 
 import android.content.Context
 import android.content.res.Configuration
+import android.widget.Button
+import androidx.compose.material3.Button
 import java.util.Locale
 
 
@@ -22,6 +25,8 @@ class AlertasActivity : AppCompatActivity() {
     private lateinit var prevButton: ImageButton
     private lateinit var nextButton: ImageButton
     private lateinit var backButton: ImageButton
+    private lateinit var dateTextView: TextView
+    private lateinit var datePickerButton: Button
 
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
     private var alertas: List<Alerta> = listOf()
@@ -43,9 +48,34 @@ class AlertasActivity : AppCompatActivity() {
         prevButton = findViewById(R.id.prevButton)
         nextButton = findViewById(R.id.nextButton)
         backButton = findViewById(R.id.backButton)
+        dateTextView = findViewById(R.id.dateTextView)
+        datePickerButton = findViewById(R.id.datePickerButton)
 
         fetchAlerts()
         setupButtonClickListeners()
+        datepicker()
+    }
+
+    private fun datepicker() {
+        datePickerButton.setOnClickListener {
+            // Get current date
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            // Create DatePickerDialog
+            val datePickerDialog = DatePickerDialog(
+                this,
+                { _, selectedYear, selectedMonth, selectedDay ->
+                    // Set selected date to TextView
+                    val formattedDate = "${selectedDay}/${selectedMonth + 1}/$selectedYear"
+                    dateTextView.text = formattedDate
+                },
+                year, month, day
+            )
+            datePickerDialog.show()
+        }
     }
 
     // Método para cambiar el idioma de la aplicación
