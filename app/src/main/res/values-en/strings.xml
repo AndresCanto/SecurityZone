@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Security Zone</string>
+    <string name="welcome_message">Welcome to Security Zone!</string>
+    <string name="status_blocked">Status: Blocked</string>
+    <string name="status_open">Status: Open</string>
+    <string name="today_entries">Today 95 cars entered</string>
+    <string name="month_entries">This month 901 cars entered</string>
+    <string name="today_exits">Today 78 cars exited</string>
+    <string name="month_exits">This month 872 cars exited</string>
+    <string name="back_button_desc">Back</string>
+    <string name="unlock">Unlock</string>
+    <string name="lock">Lock</string>
+    <string name="date">Date: 27/06/2024</string>
+    <string name="current_entries">At the moment 435 cars have entered</string>
+    <string name="alerts_sent">4 alerts have been sent</string>
+    <string name="view_monthly_report">View monthly report</string>
+    <string name="message_of_the_day">Message of the day:</string>
+    <string name="edit">Edit</string>
+    <string name="alert_title">Lock Alerts</string>
+
+
+</resources>

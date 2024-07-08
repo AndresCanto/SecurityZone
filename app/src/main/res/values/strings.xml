@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">Security Zone</string>
+    <string name="welcome_message">Bienvenido a Security Zone!</string>
+    <string name="status_blocked">Status: Bloqueado</string>
+    <string name="status_open">Status: Abierto</string>
+    <string name="today_entries">Hoy han entrado 95 carros</string>
+    <string name="month_entries">Este mes han entrado 901 carros</string>
+    <string name="today_exits">Hoy han salido 78 carros</string>
+    <string name="month_exits">Este mes han salido 872 carros</string>
+    <string name="back_button_desc">Regresar</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="lock">Bloquear</string>
+    <string name="date">Fecha: 27/06/2024</string>
+    <string name="current_entries">Al momento han entrado 435 carros</string>
+    <string name="alerts_sent">Se han enviado 4 alertas</string>
+    <string name="view_monthly_report">Ver reporte mensual</string>
+    <string name="message_of_the_day">Mensaje del día:</string>
+    <string name="edit">Editar</string>
+    <string name="alert_title">Alertas de Bloqueo</string>
+
+
 </resources>

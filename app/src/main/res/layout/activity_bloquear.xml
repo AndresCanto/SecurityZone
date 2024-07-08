@@ -65,7 +65,7 @@
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:background="@color/green"
-            android:text="Desbloquear"
+            android:text="@string/unlock"
             android:textSize="34sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -78,8 +78,9 @@
             android:layout_width="346dp"
             android:layout_height="80dp"
             android:background="@color/red"
-            android:text="Bloquear"
+            android:text="@string/lock"
             android:textSize="34sp" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView

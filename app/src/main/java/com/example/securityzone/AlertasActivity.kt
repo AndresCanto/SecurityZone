@@ -11,6 +11,11 @@ import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.*
 
+import android.content.Context
+import android.content.res.Configuration
+import java.util.Locale
+
+
 class AlertasActivity : AppCompatActivity() {
     private lateinit var textoAlerta: TextView
     private lateinit var fechaHoraAlerta: TextView
@@ -28,6 +33,8 @@ class AlertasActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Cargar el idioma guardado antes de establecer el contenido de la vista
+        loadLocale()
         setContentView(R.layout.activity_alertas)
 
         Log.d(TAG, "onCreate: Initializing views")
@@ -39,6 +46,28 @@ class AlertasActivity : AppCompatActivity() {
 
         fetchAlerts()
         setupButtonClickListeners()
+    }
+
+    // Método para cambiar el idioma de la aplicación
+    private fun setLocale(context: Context, language: String) {
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val config = Configuration()
+        config.setLocale(locale)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        // Guardar la preferencia de idioma
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("Language", language)
+        editor.apply()
+    }
+
+    // Método para cargar la preferencia de idioma
+    private fun loadLocale() {
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val language = sharedPreferences.getString("Language", "en") ?: "en"
+        setLocale(this, language)
     }
 
     private fun fetchAlerts() {

@@ -18,6 +18,8 @@ import androidx.core.view.isVisible
 import com.google.firebase.firestore.FirebaseFirestore
 import java.sql.Timestamp
 import java.util.Date
+import android.content.res.Configuration
+import java.util.Locale
 
 class BloquearActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
@@ -29,7 +31,19 @@ class BloquearActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Cargar el idioma guardado antes de establecer el contenido de la vista
+        loadLocale()
         setContentView(R.layout.activity_bloquear)
+
+        val unlockButton: Button = findViewById(R.id.button)
+        unlockButton.setOnClickListener {
+            // Lógica para desbloquear
+        }
+
+        val lockButton: Button = findViewById(R.id.button2)
+        lockButton.setOnClickListener {
+            // Lógica para bloquear
+        }
 
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.statusTextView)
@@ -57,6 +71,28 @@ class BloquearActivity : AppCompatActivity() {
                 Log.w(TAG, "Error adding document", e)
                 onComplete(false)
             }
+    }
+
+    // Método para cambiar el idioma de la aplicación
+    private fun setLocale(context: Context, language: String) {
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val config = Configuration()
+        config.setLocale(locale)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        // Guardar la preferencia de idioma
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("Language", language)
+        editor.apply()
+    }
+
+    // Método para cargar la preferencia de idioma
+    private fun loadLocale() {
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val language = sharedPreferences.getString("Language", "en") ?: "en"
+        setLocale(this, language)
     }
 
     private fun setupButtonClickListeners() {
