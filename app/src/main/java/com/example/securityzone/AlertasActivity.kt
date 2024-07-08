@@ -1,81 +1,140 @@
 package com.example.securityzone
 
 import android.app.DatePickerDialog
+import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageButton
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import java.text.SimpleDateFormat
 import java.util.*
 
-import android.content.Context
-import android.content.res.Configuration
-import android.widget.Button
-import androidx.compose.material3.Button
-import java.util.Locale
-
-
 class AlertasActivity : AppCompatActivity() {
-    private lateinit var textoAlerta: TextView
-    private lateinit var fechaHoraAlerta: TextView
-    private lateinit var prevButton: ImageButton
-    private lateinit var nextButton: ImageButton
-    private lateinit var backButton: ImageButton
-    private lateinit var dateTextView: TextView
+    private lateinit var alertasRecyclerView: RecyclerView
+    private lateinit var alertaAdapter: AlertaAdapter
     private lateinit var datePickerButton: Button
+    private lateinit var showAllAlertsButton: Button
+    private lateinit var backButton: ImageButton
 
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
     private var alertas: List<Alerta> = listOf()
-    private var currentIndex: Int = 0
-
-    companion object {
-        private const val TAG = "AlertasActivity"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Cargar el idioma guardado antes de establecer el contenido de la vista
         loadLocale()
         setContentView(R.layout.activity_alertas)
 
-        Log.d(TAG, "onCreate: Initializing views")
-        textoAlerta = findViewById(R.id.textoAlerta)
-        fechaHoraAlerta = findViewById(R.id.fechaHoraAlerta)
-        prevButton = findViewById(R.id.prevButton)
-        nextButton = findViewById(R.id.nextButton)
-        backButton = findViewById(R.id.backButton)
-        dateTextView = findViewById(R.id.dateTextView)
+        alertasRecyclerView = findViewById(R.id.alertasRecyclerView)
         datePickerButton = findViewById(R.id.datePickerButton)
+        showAllAlertsButton = findViewById(R.id.showAllAlertsButton)
+        backButton = findViewById(R.id.backButton)
 
+        setupRecyclerView()
+        setupDatePicker()
+        setupShowAllAlertsButton()
+        setupBackButton()
         fetchAlerts()
-        setupButtonClickListeners()
-        datepicker()
     }
 
-    private fun datepicker() {
-        datePickerButton.setOnClickListener {
-            // Get current date
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
+    private fun setupRecyclerView() {
+        alertaAdapter = AlertaAdapter(alertas)
+        alertasRecyclerView.layoutManager = LinearLayoutManager(this)
+        alertasRecyclerView.adapter = alertaAdapter
+    }
 
-            // Create DatePickerDialog
-            val datePickerDialog = DatePickerDialog(
+    private fun setupDatePicker() {
+        datePickerButton.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(
                 this,
-                { _, selectedYear, selectedMonth, selectedDay ->
-                    // Set selected date to TextView
-                    val formattedDate = "${selectedDay}/${selectedMonth + 1}/$selectedYear"
-                    dateTextView.text = formattedDate
+                { _, year, month, dayOfMonth ->
+                    val selectedDate = Calendar.getInstance().apply {
+                        set(year, month, dayOfMonth)
+                    }
+                    fetchAlertsByDate(selectedDate.time)
                 },
-                year, month, day
-            )
-            datePickerDialog.show()
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
+    }
+
+    private fun setupShowAllAlertsButton() {
+        showAllAlertsButton.setOnClickListener {
+            alertaAdapter.updateAlertas(alertas)
+        }
+    }
+
+    private fun setupBackButton() {
+        backButton.setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun fetchAlerts() {
+        db.collection("alertas")
+            .orderBy("hora", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { result ->
+                alertas = result.mapNotNull { document ->
+                    val texto = document.getString("text")
+                    val timestamp = document.getTimestamp("hora")
+                    if (texto != null && timestamp != null) {
+                        Alerta(texto, timestamp)
+                    } else {
+                        null
+                    }
+                }
+                alertaAdapter.updateAlertas(alertas)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "fetchAlerts: Error getting documents", exception)
+            }
+    }
+
+    private fun fetchAlertsByDate(date: Date) {
+        val startOfDay = Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }.time
+
+        val endOfDay = Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+        }.time
+
+        db.collection("alertas")
+            .whereGreaterThanOrEqualTo("hora", Timestamp(startOfDay))
+            .whereLessThanOrEqualTo("hora", Timestamp(endOfDay))
+            .orderBy("hora", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { result ->
+                val filteredAlertas = result.mapNotNull { document ->
+                    val texto = document.getString("text")
+                    val timestamp = document.getTimestamp("hora")
+                    if (texto != null && timestamp != null) {
+                        Alerta(texto, timestamp)
+                    } else {
+                        null
+                    }
+                }
+                alertaAdapter.updateAlertas(filteredAlertas)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "fetchAlertsByDate: Error getting documents", exception)
+            }
     }
 
     // Método para cambiar el idioma de la aplicación
@@ -98,70 +157,6 @@ class AlertasActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
         val language = sharedPreferences.getString("Language", "en") ?: "en"
         setLocale(this, language)
-    }
-
-    private fun fetchAlerts() {
-        Log.d(TAG, "fetchAlerts: Fetching alerts from Firestore")
-        db.collection("alertas")
-            .orderBy("hora", Query.Direction.DESCENDING)
-            .get()
-            .addOnSuccessListener { result ->
-                alertas = result.mapNotNull { document ->
-                    val texto = document.getString("text")
-                    val timestamp = document.getTimestamp("hora")
-                    if (texto != null && timestamp != null) {
-                        Alerta(texto, timestamp)
-                    } else {
-                        null
-                    }
-                }
-                if (alertas.isNotEmpty()) {
-                    currentIndex = 0
-                    displayCurrentAlert()
-                } else {
-                    Log.w(TAG, "fetchAlerts: No alerts found")
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e(TAG, "fetchAlerts: Error getting documents", exception)
-            }
-    }
-
-    private fun displayCurrentAlert() {
-        if (alertas.isNotEmpty() && currentIndex in alertas.indices) {
-            val alerta = alertas[currentIndex]
-            textoAlerta.text = alerta.texto
-            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            fechaHoraAlerta.text = sdf.format(alerta.timestamp.toDate())
-            Log.d(TAG, "displayCurrentAlert: Displaying alert at index $currentIndex")
-        } else {
-            Log.w(TAG, "displayCurrentAlert: Invalid index or empty alert list")
-        }
-    }
-
-    private fun setupButtonClickListeners() {
-        Log.d(TAG, "setupButtonClickListeners: Setting up button click listeners")
-        prevButton.setOnClickListener {
-            if (currentIndex < alertas.size - 1) {
-                currentIndex++
-                displayCurrentAlert()
-            } else {
-                Log.d(TAG, "setupButtonClickListeners: No newer alert to display")
-            }
-        }
-
-        nextButton.setOnClickListener {
-            if (currentIndex > 0) {
-                currentIndex--
-                displayCurrentAlert()
-            } else {
-                Log.d(TAG, "setupButtonClickListeners: No older alert to display")
-            }
-        }
-
-        backButton.setOnClickListener {
-            finish()
-        }
     }
 }
 

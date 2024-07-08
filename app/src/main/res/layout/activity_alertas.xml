@@ -23,93 +23,39 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.023" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/alertContainer"
-        android:layout_width="342dp"
-        android:layout_height="430dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/alertasRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:background="#FFFFFF"
-        android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@id/prevButton"
+        app:layout_constraintBottom_toTopOf="@id/datePickerButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView5">
+        app:layout_constraintTop_toBottomOf="@id/textView5"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:id="@+id/fechaHoraAlerta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#4E4E4E"
-            android:textSize="32sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/textoAlerta"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:gravity="center_horizontal"
-            android:textColor="@android:color/black"
-            android:textSize="50sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fechaHoraAlerta"
-            app:layout_constraintVertical_bias="0.5" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <ImageButton
-        android:id="@+id/prevButton"
-        android:layout_width="72dp"
-        android:layout_height="65dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="88dp"
-        android:background="#00FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/menorque" />
-
-    <LinearLayout
+    <Button
+        android:id="@+id/datePickerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="14dp"
-        android:layout_marginEnd="13dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        app:layout_constraintEnd_toStartOf="@+id/nextButton"
-        app:layout_constraintStart_toEndOf="@+id/prevButton"
-        app:layout_constraintTop_toBottomOf="@+id/alertContainer">
-
-        <TextView
-            android:id="@+id/dateTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="Select Date"
-            android:textSize="18sp" />
-
-        <Button
-            android:id="@+id/datePickerButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Choose Date" />
-
-    </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/nextButton"
-        android:layout_width="80dp"
-        android:layout_height="63dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="88dp"
-        android:background="#00FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="Choose Date"
+        app:layout_constraintBottom_toTopOf="@id/showAllAlertsButton"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/mayorque" />
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/showAllAlertsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show All Alerts"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp"/>
 
     <ImageButton
         android:id="@+id/backButton"
