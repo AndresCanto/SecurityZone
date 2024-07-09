@@ -65,33 +65,21 @@ class MsjMotivoActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
         }
         findViewById<Button>(R.id.remainderBtn).setOnClickListener {
-            showBloquearDialog()
+            createRemainder()
         }
     }
 
-    private fun showBloquearDialog() {
-        val builder = AlertDialog.Builder(this)
-        val inflater = layoutInflater
-        val dialogLayout = inflater.inflate(R.layout.dialog_msj_bloquear, null)
-        val editText = dialogLayout.findViewById<EditText>(R.id.editText)
+    private fun createRemainder() {
+        val editText = findViewById<EditText>(R.id.editText)
 
-        builder.setView(dialogLayout)
-            .setTitle("Bloquear")
-            .setPositiveButton("Confirmar") { _, _ ->
-                val inputText = editText.text.toString()
-                if (inputText.isNotEmpty()) {
-                    readTxtField(inputText) { success ->
-                        showSaveResult(success)
-                    }
-                } else {
-                    showSaveResult(false)
-                }
+        val inputText = editText.text.toString()
+        if (inputText.isNotEmpty()) {
+            readTxtField(inputText) { success ->
+                showSaveResult(success)
             }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.cancel()
-            }
-
-        builder.create().show()
+        } else {
+            showSaveResult(false)
+        }
     }
 
     private fun readTxtField(textF: String,  onComplete: (Boolean) -> Unit) {
@@ -118,9 +106,9 @@ class MsjMotivoActivity : AppCompatActivity() {
     }
     private fun showSaveResult(success: Boolean) {
         val message = if (success) {
-            "Bloqueo activado y guardado con éxito"
+            "Recordatorio creado de forma exitosa"
         } else {
-            "Error al guardar el bloqueo. Por favor, intente de nuevo."
+            "Error al crear recordatorio. Por favor, intente de nuevo."
         }
 
         AlertDialog.Builder(this)
