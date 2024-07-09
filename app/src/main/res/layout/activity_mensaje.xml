@@ -94,14 +94,15 @@
                     android:padding="15dp"
                     android:singleLine="false"
                     android:textColor="#000000"
+                    android:visibility="gone"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="@+id/button3"
-                    app:layout_constraintStart_toStartOf="@+id/button3"
+                    app:layout_constraintEnd_toEndOf="@+id/remainderBtn"
+                    app:layout_constraintStart_toStartOf="@+id/remainderBtn"
                     app:layout_constraintTop_toBottomOf="@+id/textView4"
                     app:layout_constraintVertical_bias="0.039" />
 
                 <Button
-                    android:id="@+id/button3"
+                    android:id="@+id/remainderBtn"
                     android:layout_width="292dp"
                     android:layout_height="78dp"
                     android:layout_marginTop="108dp"

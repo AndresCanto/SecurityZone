@@ -112,7 +112,7 @@ class BloquearActivity : AppCompatActivity() {
         }
     }
 
-    fun showBloquearDialog() {
+    private fun showBloquearDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.dialog_bloquear, null)
