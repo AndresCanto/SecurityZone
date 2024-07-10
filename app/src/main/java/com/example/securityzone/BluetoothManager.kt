@@ -9,9 +9,15 @@ import java.util.*
 class BluetoothManager(private val deviceAddress: String) {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothSocket: BluetoothSocket? = null
-    private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // UUID estándar para SPP
+    private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+    fun isConnected(): Boolean {
+        return bluetoothSocket?.isConnected == true
+    }
 
     fun connect(): Boolean {
+        if (isConnected()) return true
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter == null) {
             return false
@@ -29,6 +35,10 @@ class BluetoothManager(private val deviceAddress: String) {
     }
 
     fun sendCommand(command: String): Boolean {
+        if (!isConnected()) {
+            if (!connect()) return false
+        }
+
         return try {
             bluetoothSocket?.outputStream?.write(command.toByteArray())
             true

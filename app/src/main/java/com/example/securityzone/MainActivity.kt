@@ -1,7 +1,6 @@
 package com.example.securityzone
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -45,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         setupCountryToggle()
         updateStatusTextView()
 
-        bluetoothManager = BluetoothManager("00:22:11:30:EC:81")
+        bluetoothManager = (application as MyApplication).bluetoothManager
         requestBluetoothPermissions()
         connectBluetooth()
     }
@@ -141,17 +140,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun connectBluetooth() {
-        Thread {
-            if (bluetoothManager.connect()) {
-                runOnUiThread {
-                    Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+        if (!bluetoothManager.isConnected()) {
+            Thread {
+                if (bluetoothManager.connect()) {
+                    runOnUiThread {
+                        Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this, "No se pudo conectar al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            } else {
-                runOnUiThread {
-                    Toast.makeText(this, "No se pudo conectar al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }.start()
+            }.start()
+        }
     }
 
     private fun togglePluma() {
@@ -179,10 +180,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatusTextView()
+        if (!bluetoothManager.isConnected()) {
+            connectBluetooth()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        bluetoothManager.close()
+        // No cerramos la conexión Bluetooth aquí para mantenerla activa entre actividades
     }
 }
