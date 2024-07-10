@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +23,7 @@ import java.util.Locale
 
 class MsjMotivoActivity : AppCompatActivity() {
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private lateinit var bluetoothManager: BluetoothManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +31,8 @@ class MsjMotivoActivity : AppCompatActivity() {
         // Cargar el idioma guardado antes de establecer el contenido de la vista
         loadLocale()
         setContentView(R.layout.activity_mensaje)
+
+        bluetoothManager = (application as MyApplication).bluetoothManager
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -74,12 +78,27 @@ class MsjMotivoActivity : AppCompatActivity() {
 
         val inputText = editText.text.toString()
         if (inputText.isNotEmpty()) {
+            sendMessageToArduino(inputText)
             readTxtField(inputText) { success ->
                 showSaveResult(success)
             }
         } else {
             showSaveResult(false)
         }
+    }
+
+    private fun sendMessageToArduino(message: String) {
+        Thread {
+            if (bluetoothManager.sendCommand("MSG:$message")) {
+                runOnUiThread {
+                    Toast.makeText(this, "Mensaje enviado al Arduino", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "Error al enviar el mensaje al Arduino", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
     }
 
     private fun readTxtField(textF: String,  onComplete: (Boolean) -> Unit) {

@@ -1,27 +1,16 @@
 package com.example.securityzone
 
-import android.content.ContentValues.TAG
 import android.content.Context
-import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.TextView
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.google.firebase.firestore.FirebaseFirestore
-import java.sql.Timestamp
-import java.util.Date
-import android.content.res.Configuration
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import java.util.Locale
+import java.util.*
 
 class BloquearActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
@@ -29,24 +18,15 @@ class BloquearActivity : AppCompatActivity() {
     private lateinit var bloquearButton: Button
     private lateinit var desbloquearButton: Button
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private lateinit var bluetoothManager: BluetoothManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Cargar el idioma guardado antes de establecer el contenido de la vista
         loadLocale()
         setContentView(R.layout.activity_bloquear)
 
-        val unlockButton: Button = findViewById(R.id.button)
-        unlockButton.setOnClickListener {
-            // Lógica para desbloquear
-        }
-
-        val lockButton: Button = findViewById(R.id.button2)
-        lockButton.setOnClickListener {
-            // Lógica para bloquear
-        }
-
+        bluetoothManager = (application as MyApplication).bluetoothManager
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.statusTextView)
         bloquearButton = findViewById(R.id.button2)
@@ -54,47 +34,6 @@ class BloquearActivity : AppCompatActivity() {
 
         setupButtonClickListeners()
         updateUI()
-
-    }
-
-    private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
-        val data = hashMapOf(
-            "text" to textF,
-            "hora" to com.google.firebase.Timestamp(Date())
-        )
-
-        db.collection("alertas")
-            .add(data)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-                onComplete(true)
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
-                onComplete(false)
-            }
-    }
-
-    // Método para cambiar el idioma de la aplicación
-    private fun setLocale(context: Context, language: String) {
-        val locale = Locale(language)
-        Locale.setDefault(locale)
-        val config = Configuration()
-        config.setLocale(locale)
-        context.resources.updateConfiguration(config, context.resources.displayMetrics)
-
-        // Guardar la preferencia de idioma
-        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("Language", language)
-        editor.apply()
-    }
-
-    // Método para cargar la preferencia de idioma
-    private fun loadLocale() {
-        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
-        val language = sharedPreferences.getString("Language", "en") ?: "en"
-        setLocale(this, language)
     }
 
     private fun setupButtonClickListeners() {
@@ -107,8 +46,7 @@ class BloquearActivity : AppCompatActivity() {
         }
 
         desbloquearButton.setOnClickListener {
-            preferencesManager.isBlocked = false
-            updateUI()
+            sendUnblockCommandToArduino()
         }
     }
 
@@ -128,11 +66,7 @@ class BloquearActivity : AppCompatActivity() {
                     else -> ""
                 }
                 if (selectedOption.isNotEmpty()) {
-                    preferencesManager.isBlocked = true
-                    readTxtField(selectedOption) { success ->
-                        updateUI()
-                        showSaveResult(success)
-                    }
+                    sendBlockCommandToArduino(selectedOption)
                 } else {
                     showSaveResult(false)
                 }
@@ -142,6 +76,59 @@ class BloquearActivity : AppCompatActivity() {
             }
 
         builder.create().show()
+    }
+
+    private fun sendBlockCommandToArduino(selectedOption: String) {
+        Thread {
+            if (bluetoothManager.sendCommand("BLOCK")) {
+                runOnUiThread {
+                    preferencesManager.isBlocked = true
+                    updateUI()
+                    readTxtField(selectedOption) { success ->
+                        showSaveResult(success)
+                    }
+                    Toast.makeText(this, "Comando de bloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "Error al enviar el comando de bloqueo", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun sendUnblockCommandToArduino() {
+        Thread {
+            if (bluetoothManager.sendCommand("UNBLOCK")) {
+                runOnUiThread {
+                    preferencesManager.isBlocked = false
+                    updateUI()
+                    Toast.makeText(this, "Comando de desbloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "Error al enviar el comando de desbloqueo", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
+        val data = hashMapOf(
+            "text" to textF,
+            "hora" to com.google.firebase.Timestamp(Date())
+        )
+
+        db.collection("alertas")
+            .add(data)
+            .addOnSuccessListener { documentReference ->
+                Log.d("BloquearActivity", "DocumentSnapshot added with ID: ${documentReference.id}")
+                onComplete(true)
+            }
+            .addOnFailureListener { e ->
+                Log.w("BloquearActivity", "Error adding document", e)
+                onComplete(false)
+            }
     }
 
     private fun showSaveResult(success: Boolean) {
@@ -171,5 +158,24 @@ class BloquearActivity : AppCompatActivity() {
             bloquearButton.isVisible = true
             desbloquearButton.isVisible = false
         }
+    }
+
+    private fun setLocale(context: Context, language: String) {
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val config = Configuration()
+        config.setLocale(locale)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("Language", language)
+        editor.apply()
+    }
+
+    private fun loadLocale() {
+        val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val language = sharedPreferences.getString("Language", "en") ?: "en"
+        setLocale(this, language)
     }
 }
