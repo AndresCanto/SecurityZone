@@ -1,30 +1,35 @@
 package com.example.securityzone
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.ToggleButton
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import java.util.Locale
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var statusTextView: TextView
+    private lateinit var bluetoothManager: BluetoothManager
     private var spanish = true
+    private var plumaLevantada = false
+
+    companion object {
+        private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Cargar el idioma guardado antes de establecer el contenido de la vista
         loadLocale()
-
         setContentView(R.layout.activity_main)
 
         preferencesManager = PreferencesManager(this)
@@ -36,16 +41,14 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Set up click listeners for each button
         setupButtonClickListeners()
-
-        // Set up the toggle for the country
         setupCountryToggle()
-
-        // Update the status TextView
         updateStatusTextView()
-    }
 
+        bluetoothManager = BluetoothManager("00:22:11:30:EC:81")
+        requestBluetoothPermissions()
+        connectBluetooth()
+    }
 
     private fun setLocale(context: Context, language: String) {
         val locale = Locale(language)
@@ -54,7 +57,6 @@ class MainActivity : AppCompatActivity() {
         config.setLocale(locale)
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
 
-        // Guardar la preferencia de idioma
         val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("Language", language)
@@ -83,6 +85,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.informeBtn).setOnClickListener {
             startActivity(Intent(this, InformeActivity::class.java))
         }
+
+        findViewById<Button>(R.id.plumaBtn).setOnClickListener {
+            togglePluma()
+        }
     }
 
     private fun updateStatusTextView() {
@@ -108,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             val newLanguage = if (isChecked) "es" else "en"
             if (newLanguage != language) {
                 setLocale(this, newLanguage)
-                recreate() // Recrear la actividad solo si el idioma ha cambiado
+                recreate()
             }
         }
     }
@@ -121,8 +127,62 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(
+                arrayOf(
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ),
+                BLUETOOTH_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    private fun connectBluetooth() {
+        Thread {
+            if (bluetoothManager.connect()) {
+                runOnUiThread {
+                    Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "No se pudo conectar al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun togglePluma() {
+        plumaLevantada = !plumaLevantada
+        val command = if (plumaLevantada) "PLUMA_UP" else "PLUMA_DOWN"
+        Thread {
+            if (bluetoothManager.sendCommand(command)) {
+                runOnUiThread {
+                    updatePlumaButtonText()
+                    Toast.makeText(this, "Comando enviado: $command", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "Error al enviar el comando", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun updatePlumaButtonText() {
+        val plumaBtn = findViewById<Button>(R.id.plumaBtn)
+        plumaBtn.text = if (plumaLevantada) getString(R.string.pluma_up) else getString(R.string.pluma_down)
+    }
+
     override fun onResume() {
         super.onResume()
         updateStatusTextView()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        bluetoothManager.close()
     }
 }
