@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -13,6 +14,7 @@ class AlertaAdapter(private var alertas: List<Alerta>) : RecyclerView.Adapter<Al
     class AlertaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textoAlerta: TextView = view.findViewById(R.id.textoAlerta)
         val fechaHoraAlerta: TextView = view.findViewById(R.id.fechaHoraAlerta)
+        val layout: ConstraintLayout = view.findViewById(R.id.layout)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlertaViewHolder {

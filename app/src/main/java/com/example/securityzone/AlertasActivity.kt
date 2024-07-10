@@ -87,8 +87,9 @@ class AlertasActivity : AppCompatActivity() {
                 alertas = result.mapNotNull { document ->
                     val texto = document.getString("text")
                     val timestamp = document.getTimestamp("hora")
+                    val remainder = document.getBoolean("remainder")
                     if (texto != null && timestamp != null) {
-                        Alerta(texto, timestamp)
+                        Alerta(texto, timestamp, remainder)
                     } else {
                         null
                     }
@@ -124,8 +125,9 @@ class AlertasActivity : AppCompatActivity() {
                 val filteredAlertas = result.mapNotNull { document ->
                     val texto = document.getString("text")
                     val timestamp = document.getTimestamp("hora")
+                    val remainder = document.getBoolean("remainder")
                     if (texto != null && timestamp != null) {
-                        Alerta(texto, timestamp)
+                        Alerta(texto, timestamp, remainder)
                     } else {
                         null
                     }
@@ -160,4 +162,4 @@ class AlertasActivity : AppCompatActivity() {
     }
 }
 
-data class Alerta(val texto: String, val timestamp: Timestamp)
+data class Alerta(val texto: String, val timestamp: Timestamp, val remainder: Boolean?)
