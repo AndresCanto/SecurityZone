@@ -11,6 +11,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bluetoothManager: BluetoothManager
     private var spanish = true
     private var plumaLevantada = false
+    private val db = FirebaseFirestore.getInstance()
 
     companion object {
         private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1
@@ -145,6 +148,11 @@ class MainActivity : AppCompatActivity() {
                 if (bluetoothManager.connect()) {
                     runOnUiThread {
                         Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                        bluetoothManager.setDataReceivedListener { data ->
+                            runOnUiThread {
+                                handleBluetoothData(data)
+                            }
+                        }
                     }
                 } else {
                     runOnUiThread {
@@ -177,6 +185,28 @@ class MainActivity : AppCompatActivity() {
         plumaBtn.text = if (plumaLevantada) getString(R.string.pluma_up) else getString(R.string.pluma_down)
     }
 
+    private fun handleBluetoothData(data: String) {
+        val eventoTipo = when (data.trim()) {
+            "ENTRADA" -> "Entrada de vehículo"
+            "SALIDA" -> "Salida de vehículo"
+            else -> "Evento desconocido: $data"
+        }
+
+        val entradaSalida = hashMapOf(
+            "evento" to eventoTipo,
+            "timestamp" to Timestamp.now()
+        )
+
+        db.collection("entradasSalidas")
+            .add(entradaSalida)
+            .addOnSuccessListener { documentReference ->
+                Toast.makeText(this, "Evento registrado: $eventoTipo", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error al registrar el evento: $e", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     override fun onResume() {
         super.onResume()
         updateStatusTextView()
@@ -185,8 +215,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // No cerramos la conexión Bluetooth aquí para mantenerla activa entre actividades
+    override fun onPause() {
+        super.onPause()
+        bluetoothManager.close()
     }
 }
