@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -19,7 +21,6 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Date
 import java.util.Locale
-
 
 class MsjMotivoActivity : AppCompatActivity() {
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -40,6 +41,7 @@ class MsjMotivoActivity : AppCompatActivity() {
             insets
         }
         setupButtonClickListeners()
+        setupEditTextListener()
     }
 
     // Método para cambiar el idioma de la aplicación
@@ -73,14 +75,31 @@ class MsjMotivoActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupEditTextListener() {
+        val editText = findViewById<EditText>(R.id.editText)
+        editText.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                createRemainder()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
     private fun createRemainder() {
         val editText = findViewById<EditText>(R.id.editText)
 
         val inputText = editText.text.toString()
         if (inputText.isNotEmpty()) {
-            sendMessageToArduino(inputText)
-            readTxtField(inputText) { success ->
+            val messageWithHeader = "Remainder: $inputText"
+            sendMessageToArduino(inputText) // Send message without header
+            readTxtField(messageWithHeader) { success ->
                 showSaveResult(success)
+                if (success) {
+                    editText.text.clear() // Clear the screen after sending
+                }
             }
         } else {
             showSaveResult(false)
@@ -101,7 +120,7 @@ class MsjMotivoActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun readTxtField(textF: String,  onComplete: (Boolean) -> Unit) {
+    private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
         val data = hashMapOf(
             "text" to textF,
             "hora" to pickDate(),
@@ -123,6 +142,7 @@ class MsjMotivoActivity : AppCompatActivity() {
     private fun pickDate(): Timestamp {
         return Timestamp(Date())
     }
+
     private fun showSaveResult(success: Boolean) {
         val message = if (success) {
             "Recordatorio creado de forma exitosa"

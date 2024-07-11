@@ -84,7 +84,8 @@ class BloquearActivity : AppCompatActivity() {
                 runOnUiThread {
                     preferencesManager.isBlocked = true
                     updateUI()
-                    readTxtField(selectedOption) { success ->
+                    val messageWithHeader = "Alert: $selectedOption"
+                    readTxtField(messageWithHeader) { success ->
                         showSaveResult(success)
                     }
                     Toast.makeText(this, "Comando de bloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
