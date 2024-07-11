@@ -117,7 +117,8 @@ class BloquearActivity : AppCompatActivity() {
     private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
         val data = hashMapOf(
             "text" to textF,
-            "hora" to com.google.firebase.Timestamp(Date())
+            "hora" to com.google.firebase.Timestamp(Date()),
+            "msj" to false
         )
 
         db.collection("alertas")

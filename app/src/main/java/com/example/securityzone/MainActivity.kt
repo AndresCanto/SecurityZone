@@ -1,6 +1,7 @@
 package com.example.securityzone
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -15,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import java.util.*
 
+@SuppressLint("StaticFieldLeak")
 object AppContext {
     lateinit var context: Context
 }
