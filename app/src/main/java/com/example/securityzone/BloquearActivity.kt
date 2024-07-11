@@ -84,7 +84,7 @@ class BloquearActivity : AppCompatActivity() {
                 runOnUiThread {
                     preferencesManager.isBlocked = true
                     updateUI()
-                    val messageWithHeader = "Alert: $selectedOption"
+                    val messageWithHeader = "Alerta: $selectedOption"
                     readTxtField(messageWithHeader) { success ->
                         showSaveResult(success)
                     }

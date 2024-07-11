@@ -93,7 +93,7 @@ class MsjMotivoActivity : AppCompatActivity() {
 
         val inputText = editText.text.toString()
         if (inputText.isNotEmpty()) {
-            val messageWithHeader = "Remainder: $inputText"
+            val messageWithHeader = "Mensaje: $inputText"
             sendMessageToArduino(inputText) // Send message without header
             readTxtField(messageWithHeader) { success ->
                 showSaveResult(success)
@@ -110,11 +110,11 @@ class MsjMotivoActivity : AppCompatActivity() {
         Thread {
             if (bluetoothManager.sendCommand("MSG:$message")) {
                 runOnUiThread {
-                    Toast.makeText(this, "Mensaje enviado al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Mensaje enviado al monitor", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el mensaje al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Error al enviar el mensaje al monitor", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -124,7 +124,7 @@ class MsjMotivoActivity : AppCompatActivity() {
         val data = hashMapOf(
             "text" to textF,
             "hora" to pickDate(),
-            "remainder" to true
+            "msj" to true
         )
 
         db.collection("alertas")
@@ -145,9 +145,9 @@ class MsjMotivoActivity : AppCompatActivity() {
 
     private fun showSaveResult(success: Boolean) {
         val message = if (success) {
-            "Recordatorio creado de forma exitosa"
+            "Mensaje enviado de forma exitosa"
         } else {
-            "Error al crear recordatorio. Por favor, intente de nuevo."
+            "Error al enviar mensaje. Por favor, intente de nuevo."
         }
 
         AlertDialog.Builder(this)

@@ -14,9 +14,11 @@
     <string name="current_entries">At the moment 435 cars have entered</string>
     <string name="alerts_sent">4 alerts have been sent</string>
     <string name="view_monthly_report">View monthly report</string>
-    <string name="message_of_the_day">Remainders:</string>
-    <string name="edit">Edit</string>
+    <string name="message_of_the_day">Send a message to the monitor</string>
+    <string name="send">Send</string>
     <string name="alert_title">Lock Alerts</string>
+    <string name="pluma_up">Lower Barrier</string>
+    <string name="pluma_down">Raise Barrier</string>
 
 
 </resources>

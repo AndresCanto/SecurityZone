@@ -78,74 +78,41 @@
                     <TextView
                         android:id="@+id/textView4"
                         android:layout_width="292dp"
-                        android:layout_height="64dp"
-                        android:layout_marginTop="80dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="132dp"
                         android:text="@string/message_of_the_day"
                         android:textAlignment="center"
                         android:textColor="@color/white"
                         android:textSize="34sp"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/textView11"
-                        android:layout_width="292dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="100dp"
-                        android:text="Título:"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
                     <EditText
                         android:id="@+id/editText"
                         android:layout_width="292dp"
                         android:layout_height="48dp"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="120dp"
                         android:background="#FFFFFF"
                         android:hint="Ingrese aquí"
                         android:padding="10dp"
                         android:visibility="visible"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView11" />
+                        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
-                    <EditText
-                        android:id="@+id/editTextTextMultiLine"
-                        android:layout_width="350dp"
-                        android:layout_height="54dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="80dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="#FFFFFF"
-                        android:ems="10"
-                        android:gravity="start|top"
-                        android:hint="BIENVENIDOS (:"
-                        android:inputType="textMultiLine"
-                        android:padding="15dp"
-                        android:singleLine="false"
-                        android:textColor="#000000"
-                        android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="@+id/remainderBtn"
-                        app:layout_constraintStart_toStartOf="@+id/remainderBtn"
-                        app:layout_constraintTop_toBottomOf="@+id/textView4"
-                        app:layout_constraintVertical_bias="0.039" />
-
-                    <Button
-                        android:id="@+id/remainderBtn"
-                        android:layout_width="292dp"
-                        android:layout_height="78dp"
-                        android:layout_marginTop="100dp"
-                        android:text="@string/edit"
-                        android:textSize="24sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/editText" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <Button
+                    android:id="@+id/remainderBtn"
+                    android:layout_width="292dp"
+                    android:layout_height="78dp"
+                    android:layout_marginTop="92dp"
+                    android:text="@string/send"
+                    android:textSize="24sp" />
 
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

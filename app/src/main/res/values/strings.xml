@@ -14,8 +14,8 @@
     <string name="current_entries">Al momento han entrado 435 carros</string>
     <string name="alerts_sent">Se han enviado 4 alertas</string>
     <string name="view_monthly_report">Ver reporte mensual</string>
-    <string name="message_of_the_day">Recordatorios</string>
-    <string name="edit">Crear</string>
+    <string name="message_of_the_day">Mandar mensaje al monitor</string>
+    <string name="send">Enviar</string>
     <string name="alert_title">Alertas de Bloqueo</string>
     <string name="toggle_pluma" translatable="false">Toggle Pluma</string>
     <string name="pluma_up">Bajar Pluma</string>

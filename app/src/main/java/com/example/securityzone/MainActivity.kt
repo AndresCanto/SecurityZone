@@ -15,6 +15,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import java.util.*
 
+object AppContext {
+    lateinit var context: Context
+}
+
 class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var statusTextView: TextView
@@ -31,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        AppContext.context = applicationContext
         loadLocale()
         setContentView(R.layout.activity_main)
 
