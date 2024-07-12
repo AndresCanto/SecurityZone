@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Ingrese el motivo del bloqueo:"
+        android:text="@string/enter_block_reason"
         android:textSize="18sp" />
 
     <RadioGroup
@@ -22,35 +22,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:text="Cierre por reservación" />
+            android:text="@string/close_for_reservation" />
 
         <RadioButton
             android:id="@+id/radioButton2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:text="Cierre por mantenimiento" />
+            android:text="@string/close_for_maintenance" />
 
         <RadioButton
             android:id="@+id/radioButton3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:text="Cierre por fin del dia" />
+            android:text="@string/close_for_end_of_day" />
 
         <RadioButton
             android:id="@+id/radioButton4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:text="Otro motivo" />
+            android:text="@string/other_reason" />
     </RadioGroup>
 
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ingrese aquí"
+        android:hint="@string/enter_here"
         android:visibility="invisible" />
 
 </LinearLayout>

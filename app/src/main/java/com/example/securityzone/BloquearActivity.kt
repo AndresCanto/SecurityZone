@@ -57,8 +57,8 @@ class BloquearActivity : AppCompatActivity() {
         val radioGroup = dialogLayout.findViewById<RadioGroup>(R.id.radioGroup)
 
         builder.setView(dialogLayout)
-            .setTitle("Bloquear")
-            .setPositiveButton("Confirmar") { _, _ ->
+            .setTitle(getString(R.string.lock_title)) // Aquí se utiliza getString() para obtener la cadena del archivo strings.xml
+            .setPositiveButton(getString(R.string.positive)) { _, _ ->
                 val selectedOption = when (radioGroup.checkedRadioButtonId) {
                     R.id.radioButton1 -> dialogLayout.findViewById<RadioButton>(R.id.radioButton1).text.toString()
                     R.id.radioButton2 -> dialogLayout.findViewById<RadioButton>(R.id.radioButton2).text.toString()
@@ -71,7 +71,7 @@ class BloquearActivity : AppCompatActivity() {
                     showSaveResult(false)
                 }
             }
-            .setNegativeButton("Cancelar") { dialog, _ ->
+            .setNegativeButton(getString(R.string.negative)) { dialog, _ ->
                 dialog.cancel()
             }
 
@@ -88,11 +88,11 @@ class BloquearActivity : AppCompatActivity() {
                     readTxtField(messageWithHeader) { success ->
                         showSaveResult(success)
                     }
-                    Toast.makeText(this, "Comando de bloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.lock_positive)), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando de bloqueo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.lock_negative)), Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -104,11 +104,11 @@ class BloquearActivity : AppCompatActivity() {
                 runOnUiThread {
                     preferencesManager.isBlocked = false
                     updateUI()
-                    Toast.makeText(this, "Comando de desbloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando de desbloqueo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -134,9 +134,9 @@ class BloquearActivity : AppCompatActivity() {
 
     private fun showSaveResult(success: Boolean) {
         val message = if (success) {
-            "Bloqueo activado y guardado con éxito"
+            (getString(R.string.save_result_positive))
         } else {
-            "Error al guardar el bloqueo. Por favor, intente de nuevo."
+            (getString(R.string.save_result_negative))
         }
 
         AlertDialog.Builder(this)
@@ -149,12 +149,12 @@ class BloquearActivity : AppCompatActivity() {
 
     private fun updateUI() {
         if (preferencesManager.isBlocked) {
-            statusTextView.text = "Status: Bloqueado"
+            statusTextView.text = (getString(R.string.status_blocked))
             statusTextView.setBackgroundColor(resources.getColor(R.color.red, theme))
             bloquearButton.isVisible = false
             desbloquearButton.isVisible = true
         } else {
-            statusTextView.text = "Status: Abierto"
+            statusTextView.text = (getString(R.string.status_open))
             statusTextView.setBackgroundColor(resources.getColor(R.color.green, theme))
             bloquearButton.isVisible = true
             desbloquearButton.isVisible = false

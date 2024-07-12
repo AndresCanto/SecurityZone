@@ -9,6 +9,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 
+
 class BarChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -80,7 +81,7 @@ class BarChartView @JvmOverloads constructor(
         // Dibuja el título centrado
         paint.color = Color.WHITE
         paint.textSize = 40f
-        val title = "Grafico Mensual"
+        val title = context.getString(R.string.monthly_graphic_title)
         val titleWidth = paint.measureText(title)
         val xPos = (width - titleWidth) / 2
         canvas.drawText(title, xPos, 50f, paint)

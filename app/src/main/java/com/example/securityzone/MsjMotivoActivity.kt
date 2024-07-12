@@ -110,11 +110,11 @@ class MsjMotivoActivity : AppCompatActivity() {
         Thread {
             if (bluetoothManager.sendCommand("MSG:$message")) {
                 runOnUiThread {
-                    Toast.makeText(this, "Mensaje enviado al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.message_sent_positive)), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el mensaje al Arduino", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, (getString(R.string.message_sent_negative)), Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -145,9 +145,9 @@ class MsjMotivoActivity : AppCompatActivity() {
 
     private fun showSaveResult(success: Boolean) {
         val message = if (success) {
-            "Recordatorio creado de forma exitosa"
+            (getString(R.string.reminder_positive))
         } else {
-            "Error al crear recordatorio. Por favor, intente de nuevo."
+            (getString(R.string.reminder_negative))
         }
 
         AlertDialog.Builder(this)

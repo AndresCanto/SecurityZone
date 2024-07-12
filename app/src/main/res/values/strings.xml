@@ -15,9 +15,56 @@
     <string name="alerts_sent">Se han enviado 4 alertas</string>
     <string name="view_monthly_report">Ver reporte mensual</string>
     <string name="message_of_the_day">Recordatorios</string>
-    <string name="edit">Crear</string>
+    <string name="edit">Listo</string>
     <string name="alert_title">Alertas de Bloqueo</string>
     <string name="toggle_pluma" translatable="false">Toggle Pluma</string>
     <string name="pluma_up">Bajar Pluma</string>
     <string name="pluma_down">Levantar Pluma</string>
+    <string name="enter_block_reason">Ingrese el motivo del bloqueo:</string>
+    <string name="close_for_reservation">Cierre por reservación</string>
+    <string name="close_for_maintenance">Cierre por mantenimiento</string>
+    <string name="close_for_end_of_day">Cierre por fin del día</string>
+    <string name="other_reason">Otro motivo</string>
+    <string name="enter_here">Ingrese aquí</string>
+    <string name="lock_title">Bloquear</string>
+    <string name="positive">confirmar</string>
+    <string name="negative">cancelar</string>
+    <string name="lock_positive">Comando de bloqueo enviado al Arduino</string>
+    <string name="lock_negative">Error al enviar el comando de bloqueo</string>
+    <string name="unlock_positive">Comando de desbloqueo enviado al Arduino</string>
+    <string name="unlock_negative">Error al enviar el comando de desbloqueo</string>
+    <string name="save_result_positive">Bloqueo activado y guardado con éxito</string>
+    <string name="save_result_negative">Error al guardar el bloqueo. Por favor, intente de nuevo.</string>
+    <string name="bluetooth_positive">Conectado al dispositivo Bluetooth</string>
+    <string name="bluetooth_negative">No se pudo conectar al dispositivo Bluetooth</string>
+    <string name="command_positive">Comando enviado:</string>
+    <string name="command_negative">Error al enviar el comando:</string>
+    <string name="entrada">Entrada de vehículo</string>
+    <string name="salida">Salida de vehiculo</string>
+    <string name="unknown">Evento desconocido</string>
+    <string name="reg_positive">Evento registrado:</string>
+    <string name="reg_negative">Error al registrar el evento:</string>
+    <string name="all_alerts_btn">Mostrar todas las alertas</string>
+    <string name="choose_date_btn">Elegir la   </string>
+    <string name="title">Titulo</string>
+    <string name="remainder_wrt">Escriba su recordatorio</string>
+    <string name="monthly_graphic_title">Grafico Mensual</string>
+    <string name="message_sent_positive">Mensaje enviado al Arduino</string>
+    <string name="message_sent_negative">Error al enviar el mensaje al Arduino</string>
+    <string name="reminder_positive">Recordatorio creado de forma exitosa</string>
+    <string name="reminder_negative">Error al crear recordatorio. Por favor, intente de nuevo.</string>
+    <string name="m1">Ene</string>
+    <string name="m2">Feb</string>
+    <string name="m3">Mar</string>
+    <string name="m4">Abr</string>
+    <string name="m5">May</string>
+    <string name="m6">Jun</string>
+    <string name="m7">Jul</string>
+    <string name="m8">Ago</string>
+    <string name="m9">Sep</string>
+    <string name="m10">Oct</string>
+    <string name="m11">Nov</string>
+    <string name="m12">Dic</string>
+
+
 </resources>

@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             Thread {
                 if (bluetoothManager.connect()) {
                     runOnUiThread {
-                        Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, (getString(R.string.bluetooth_positive)), Toast.LENGTH_SHORT).show()
                         bluetoothManager.setDataReceivedListener { data ->
                             runOnUiThread {
                                 handleBluetoothData(data)
@@ -156,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this, "No se pudo conectar al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, (getString(R.string.bluetooth_negative)), Toast.LENGTH_SHORT).show()
                     }
                 }
             }.start()
@@ -170,11 +170,11 @@ class MainActivity : AppCompatActivity() {
             if (bluetoothManager.sendCommand(command)) {
                 runOnUiThread {
                     updatePlumaButtonText()
-                    Toast.makeText(this, "Comando enviado: $command", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.command_positive) + ": " + command, Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.command_negative), Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -187,9 +187,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleBluetoothData(data: String) {
         val eventoTipo = when (data.trim()) {
-            "ENTRADA" -> "Entrada de vehículo"
-            "SALIDA" -> "Salida de vehículo"
-            else -> "Evento desconocido: $data"
+            "ENTRADA" -> (getString(R.string.entrada))
+            "SALIDA" -> (getString(R.string.salida))
+            else -> getString(R.string.unknown) + ": " + data
+
         }
 
         val entradaSalida = hashMapOf(
@@ -200,10 +201,11 @@ class MainActivity : AppCompatActivity() {
         db.collection("entradasSalidas")
             .add(entradaSalida)
             .addOnSuccessListener { documentReference ->
-                Toast.makeText(this, "Evento registrado: $eventoTipo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.reg_positive) + ": " + eventoTipo, Toast.LENGTH_SHORT).show()
+
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Error al registrar el evento: $e", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, (getString(R.string.reg_negative)) + ": " + e, Toast.LENGTH_SHORT).show()
             }
     }
 
