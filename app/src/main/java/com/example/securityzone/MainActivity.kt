@@ -6,7 +6,9 @@ import android.content.*
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
@@ -27,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var statusTextView: TextView
     private lateinit var bluetoothStatusTextView: TextView
-    private var spanish = true
     private var plumaLevantada = false
     private val db = FirebaseFirestore.getInstance()
     private lateinit var bluetoothService: BluetoothService
@@ -59,8 +60,6 @@ class MainActivity : AppCompatActivity() {
         loadLocale()
         setContentView(R.layout.activity_main)
 
-
-
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.textView2)
         bluetoothStatusTextView = findViewById(R.id.bluetoothStatusTextView)
@@ -75,10 +74,8 @@ class MainActivity : AppCompatActivity() {
         setupCountryToggle()
         updateStatusTextView()
 
-        // Set initial Bluetooth status
         updateBluetoothStatus(getString(R.string.bluetooth_connecting))
 
-        // Bind to BluetoothService
         Intent(this, BluetoothService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
@@ -124,23 +121,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupButtonClickListeners() {
-        findViewById<ImageButton>(R.id.mensajeBtn).setOnClickListener {
+        findViewById<ImageButton>(R.id.mensajeBtn)?.setOnClickListener {
             startActivity(Intent(this, MsjMotivoActivity::class.java))
         }
 
-        findViewById<ImageButton>(R.id.bloquearBtn).setOnClickListener {
+        findViewById<ImageButton>(R.id.bloquearBtn)?.setOnClickListener {
             startActivity(Intent(this, BloquearActivity::class.java))
         }
 
-        findViewById<ImageButton>(R.id.alertaBtn).setOnClickListener {
+        findViewById<ImageButton>(R.id.alertaBtn)?.setOnClickListener {
             startActivity(Intent(this, AlertasActivity::class.java))
         }
 
-        findViewById<ImageButton>(R.id.informeBtn).setOnClickListener {
+        findViewById<ImageButton>(R.id.informeBtn)?.setOnClickListener {
             startActivity(Intent(this, InformeActivity::class.java))
         }
 
-        findViewById<Button>(R.id.plumaBtn).setOnClickListener {
+        findViewById<Button>(R.id.plumaBtn)?.setOnClickListener {
             togglePluma()
         }
     }
@@ -167,10 +164,19 @@ class MainActivity : AppCompatActivity() {
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
             val newLanguage = if (isChecked) "es" else "en"
             if (newLanguage != language) {
-                setLocale(this, newLanguage)
-                recreate()
+                changeLanguage(newLanguage)
             }
         }
+    }
+
+    private fun changeLanguage(newLanguage: String) {
+        setLocale(this, newLanguage)
+        Handler(Looper.getMainLooper()).postDelayed({
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }, 100)
     }
 
     private fun updateToggleButtonBackground(button: ToggleButton, isSpanish: Boolean) {
@@ -252,5 +258,16 @@ class MainActivity : AppCompatActivity() {
             unbindService(connection)
             isBound = false
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("plumaLevantada", plumaLevantada)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        plumaLevantada = savedInstanceState.getBoolean("plumaLevantada", false)
+        updatePlumaButtonText()
     }
 }
