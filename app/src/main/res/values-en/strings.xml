@@ -72,6 +72,8 @@
     <string name="bluetooth_connecting">Bluetooth: Connecting...</string>
     <string name="bluetooth_connected">Bluetooth: Connected</string>
     <string name="bluetooth_disconnected">Bluetooth: Disconnected</string>
+    <string name="entrada_detectada">Entry detected</string>
+    <string name="salida_detectada">Exit detected</string>
 
 
 </resources>

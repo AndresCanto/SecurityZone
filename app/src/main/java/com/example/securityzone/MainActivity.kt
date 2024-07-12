@@ -221,9 +221,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleBluetoothData(data: String) {
-        when (data.trim()) {
-            "E" -> registrarEvento("entrada")
-            "S" -> registrarEvento("salida")
+        when (data.trim().uppercase()) {
+            "E" -> {
+                registrarEvento("entrada")
+                Toast.makeText(this, getString(R.string.entrada_detectada), Toast.LENGTH_SHORT).show()
+            }
+            "S" -> {
+                registrarEvento("salida")
+                Toast.makeText(this, getString(R.string.salida_detectada), Toast.LENGTH_SHORT).show()
+            }
             else -> {
                 Toast.makeText(this, getString(R.string.unknown) + ": " + data, Toast.LENGTH_SHORT).show()
             }
