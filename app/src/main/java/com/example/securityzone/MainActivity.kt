@@ -170,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun togglePluma() {
         plumaLevantada = !plumaLevantada
         val command = if (plumaLevantada) "PLUMA_UP" else "PLUMA_DOWN"
@@ -193,21 +194,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleBluetoothData(data: String) {
-        val eventoTipo = when (data.trim()) {
-            "ENTRADA" -> "Entrada de vehículo"
-            "SALIDA" -> "Salida de vehículo"
-            else -> "Evento desconocido: $data"
+        when (data.trim()) {
+            "E" -> registrarEvento("entrada")
+            "S" -> registrarEvento("salida")
+            else -> {
+                Toast.makeText(this, "Evento desconocido: $data", Toast.LENGTH_SHORT).show()
+            }
         }
+    }
 
+    private fun registrarEvento(tipoEvento: String) {
         val entradaSalida = hashMapOf(
-            "evento" to eventoTipo,
-            "timestamp" to Timestamp.now()
+            "tipo" to tipoEvento,
+            "hora" to Timestamp.now()
         )
 
         db.collection("entradasSalidas")
             .add(entradaSalida)
             .addOnSuccessListener { documentReference ->
-                Toast.makeText(this, "Evento registrado: $eventoTipo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Evento registrado: $tipoEvento", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error al registrar el evento: $e", Toast.LENGTH_SHORT).show()

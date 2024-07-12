@@ -94,23 +94,20 @@ class MsjMotivoActivity : AppCompatActivity() {
         val inputText = editText.text.toString()
         if (inputText.isNotEmpty()) {
             val messageWithHeader = "Mensaje: $inputText"
-            sendMessageToArduino(inputText) // Send message without header
-            readTxtField(messageWithHeader) { success ->
-                showSaveResult(success)
-                if (success) {
-                    editText.text.clear() // Clear the screen after sending
-                }
-            }
+            sendMessageToArduino(inputText, messageWithHeader) // Send message with header to Arduino and save to Firestore
         } else {
             showSaveResult(false)
         }
     }
 
-    private fun sendMessageToArduino(message: String) {
+    private fun sendMessageToArduino(message: String, messageWithHeader: String) {
         Thread {
             if (bluetoothManager.sendCommand("MSG:$message")) {
                 runOnUiThread {
                     Toast.makeText(this, "Mensaje enviado al monitor", Toast.LENGTH_SHORT).show()
+                    readTxtField(messageWithHeader) { success ->
+                        showSaveResult(success)
+                    }
                 }
             } else {
                 runOnUiThread {

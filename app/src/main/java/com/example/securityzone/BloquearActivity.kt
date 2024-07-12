@@ -1,5 +1,6 @@
 package com.example.securityzone
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -66,7 +67,8 @@ class BloquearActivity : AppCompatActivity() {
                     else -> ""
                 }
                 if (selectedOption.isNotEmpty()) {
-                    sendBlockCommandToArduino(selectedOption)
+                    // Enviar bloqueo por Bluetooth y guardar en Firestore
+                    sendBlockCommand(selectedOption)
                 } else {
                     showSaveResult(false)
                 }
@@ -78,21 +80,22 @@ class BloquearActivity : AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun sendBlockCommandToArduino(selectedOption: String) {
+    private fun sendBlockCommand(selectedOption: String) {
         Thread {
             if (bluetoothManager.sendCommand("BLOCK")) {
-                runOnUiThread {
-                    preferencesManager.isBlocked = true
-                    updateUI()
-                    val messageWithHeader = "Alerta: $selectedOption"
-                    readTxtField(messageWithHeader) { success ->
+                // Enviar a Firestore sin esperar confirmación de Bluetooth
+                val messageWithHeader = "Alerta: $selectedOption"
+                readTxtField(messageWithHeader) { success ->
+                    runOnUiThread {
+                        preferencesManager.isBlocked = true
+                        updateUI()
                         showSaveResult(success)
+                        Toast.makeText(this, "Comando de bloqueo enviado al Arduino y registrado en Firestore", Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(this, "Comando de bloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando de bloqueo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Error al enviar el comando de bloqueo por Bluetooth", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -108,7 +111,7 @@ class BloquearActivity : AppCompatActivity() {
                 }
             } else {
                 runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando de desbloqueo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Error al enviar el comando de desbloqueo por Bluetooth", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -118,17 +121,16 @@ class BloquearActivity : AppCompatActivity() {
         val data = hashMapOf(
             "text" to textF,
             "hora" to com.google.firebase.Timestamp(Date()),
-            "msj" to false
         )
 
         db.collection("alertas")
             .add(data)
             .addOnSuccessListener { documentReference ->
-                Log.d("BloquearActivity", "DocumentSnapshot added with ID: ${documentReference.id}")
+                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
                 onComplete(true)
             }
             .addOnFailureListener { e ->
-                Log.w("BloquearActivity", "Error adding document", e)
+                Log.w(TAG, "Error adding document", e)
                 onComplete(false)
             }
     }
@@ -137,7 +139,7 @@ class BloquearActivity : AppCompatActivity() {
         val message = if (success) {
             "Bloqueo activado y guardado con éxito"
         } else {
-            "Error al guardar el bloqueo. Por favor, intente de nuevo."
+            "Error al guardar el bloqueo. Por favor, inténtelo de nuevo."
         }
 
         AlertDialog.Builder(this)
