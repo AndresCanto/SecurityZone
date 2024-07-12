@@ -7,11 +7,13 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import java.util.*
@@ -82,6 +84,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestBluetoothPermissions()
+        val filter = IntentFilter("BluetoothDataReceived")
+        LocalBroadcastManager.getInstance(this).registerReceiver(bluetoothDataReceiver, filter)
+    }
+
+    private val bluetoothDataReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val data = intent?.getStringExtra("data")
+            data?.let {
+                Log.d("MainActivity", "Datos recibidos: $it")
+                handleBluetoothData(it)
+            }
+        }
     }
 
     private fun updateBluetoothStatus(status: String) {
@@ -233,6 +247,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(bluetoothDataReceiver)
         if (isBound) {
             unbindService(connection)
             isBound = false
