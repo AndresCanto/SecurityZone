@@ -94,11 +94,12 @@
                         android:id="@+id/textView11"
                         android:layout_width="292dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="100dp"
+                        android:layout_marginTop="92dp"
                         android:text="@string/title"
                         android:textColor="#FFFFFF"
                         android:textSize="20sp"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/textView4" />
 

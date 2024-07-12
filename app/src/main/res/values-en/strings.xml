@@ -45,7 +45,7 @@
     <string name="reg_negative">Error recording the event:</string>
     <string name="all_alerts_btn">Show all alerts</string>
     <string name="choose_date_btn">Choose Date</string>
-    <string name="title">Titulo</string>
+    <string name="title">Title</string>
     <string name="remainder_wrt">Write your reminder</string>
     <string name="monthly_graphic_title">Monthly graphic</string>
     <string name="message_sent_positive">Message sent to Arduino.</string>
