@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
         loadLocale()
         setContentView(R.layout.activity_main)
 
+
+
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.textView2)
         bluetoothStatusTextView = findViewById(R.id.bluetoothStatusTextView)

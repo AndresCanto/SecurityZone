@@ -65,7 +65,7 @@
     <string name="m11">Nov</string>
     <string name="m12">Dec</string>
 
-    <string name="bluetooth_disconnect_msg">Bluetooth is disconnected</string>
+    <string name="bluetooth_disconnect_msg">Servicio bluetooth desconectado</string>
 
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
