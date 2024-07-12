@@ -1,10 +1,13 @@
 package com.example.securityzone
 
+import android.content.ComponentName
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
@@ -24,16 +27,26 @@ import java.util.Locale
 
 class MsjMotivoActivity : AppCompatActivity() {
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private lateinit var bluetoothManager: BluetoothManager
+    private lateinit var bluetoothService: BluetoothService
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as BluetoothService.LocalBinder
+            bluetoothService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Cargar el idioma guardado antes de establecer el contenido de la vista
         loadLocale()
         setContentView(R.layout.activity_mensaje)
-
-        bluetoothManager = (application as MyApplication).bluetoothManager
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -42,9 +55,21 @@ class MsjMotivoActivity : AppCompatActivity() {
         }
         setupButtonClickListeners()
         setupEditTextListener()
+
+        // Bind to BluetoothService
+        Intent(this, BluetoothService::class.java).also { intent ->
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
-    // Método para cambiar el idioma de la aplicación
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
+    }
+
     private fun setLocale(context: Context, language: String) {
         val locale = Locale(language)
         Locale.setDefault(locale)
@@ -52,14 +77,12 @@ class MsjMotivoActivity : AppCompatActivity() {
         config.setLocale(locale)
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
 
-        // Guardar la preferencia de idioma
         val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("Language", language)
         editor.apply()
     }
 
-    // Método para cargar la preferencia de idioma
     private fun loadLocale() {
         val sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE)
         val language = sharedPreferences.getString("Language", "en") ?: "en"
@@ -68,7 +91,7 @@ class MsjMotivoActivity : AppCompatActivity() {
 
     private fun setupButtonClickListeners() {
         findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            finish()
         }
         findViewById<Button>(R.id.remainderBtn).setOnClickListener {
             createRemainder()
@@ -77,9 +100,10 @@ class MsjMotivoActivity : AppCompatActivity() {
 
     private fun setupEditTextListener() {
         val editText = findViewById<EditText>(R.id.editText)
-        editText.setOnEditorActionListener { v, actionId, event ->
+        editText.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE ||
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            ) {
                 createRemainder()
                 true
             } else {
@@ -93,38 +117,33 @@ class MsjMotivoActivity : AppCompatActivity() {
 
         val inputText = editText.text.toString()
         if (inputText.isNotEmpty()) {
-            val messageWithHeader = "Remainder: $inputText"
-            sendMessageToArduino(inputText) // Send message without header
-            readTxtField(messageWithHeader) { success ->
-                showSaveResult(success)
-                if (success) {
-                    editText.text.clear() // Clear the screen after sending
-                }
-            }
+            val messageWithHeader = "Mensaje: $inputText"
+            sendMessageToArduino(inputText, messageWithHeader)
         } else {
             showSaveResult(false)
         }
     }
 
-    private fun sendMessageToArduino(message: String) {
-        Thread {
-            if (bluetoothManager.sendCommand("MSG:$message")) {
-                runOnUiThread {
-                    Toast.makeText(this, (getString(R.string.message_sent_positive)), Toast.LENGTH_SHORT).show()
+    private fun sendMessageToArduino(message: String, messageWithHeader: String) {
+        if (isBound) {
+            if (bluetoothService.sendCommand("MSG:$message")) {
+                Toast.makeText(this, (getString(R.string.message_sent_positive)), Toast.LENGTH_SHORT).show()
+                readTxtField(messageWithHeader) { success ->
+                    showSaveResult(success)
                 }
             } else {
-                runOnUiThread {
-                    Toast.makeText(this, (getString(R.string.message_sent_negative)), Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, (getString(R.string.message_sent_negative)), Toast.LENGTH_SHORT).show()
             }
-        }.start()
+        } else {
+            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
         val data = hashMapOf(
             "text" to textF,
             "hora" to pickDate(),
-            "remainder" to true
+            "msj" to true
         )
 
         db.collection("alertas")

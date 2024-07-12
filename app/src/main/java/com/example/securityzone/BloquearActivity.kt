@@ -1,8 +1,10 @@
 package com.example.securityzone
 
-import android.content.Context
+import android.content.*
+import android.content.ContentValues.TAG
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
@@ -18,7 +20,20 @@ class BloquearActivity : AppCompatActivity() {
     private lateinit var bloquearButton: Button
     private lateinit var desbloquearButton: Button
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private lateinit var bluetoothManager: BluetoothManager
+    private lateinit var bluetoothService: BluetoothService
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as BluetoothService.LocalBinder
+            bluetoothService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +41,6 @@ class BloquearActivity : AppCompatActivity() {
         loadLocale()
         setContentView(R.layout.activity_bloquear)
 
-        bluetoothManager = (application as MyApplication).bluetoothManager
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.statusTextView)
         bloquearButton = findViewById(R.id.button2)
@@ -34,6 +48,19 @@ class BloquearActivity : AppCompatActivity() {
 
         setupButtonClickListeners()
         updateUI()
+
+        // Bind to BluetoothService
+        Intent(this, BluetoothService::class.java).also { intent ->
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
     }
 
     private fun setupButtonClickListeners() {
@@ -66,7 +93,7 @@ class BloquearActivity : AppCompatActivity() {
                     else -> ""
                 }
                 if (selectedOption.isNotEmpty()) {
-                    sendBlockCommandToArduino(selectedOption)
+                    sendBlockCommand(selectedOption)
                 } else {
                     showSaveResult(false)
                 }
@@ -78,15 +105,16 @@ class BloquearActivity : AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun sendBlockCommandToArduino(selectedOption: String) {
-        Thread {
-            if (bluetoothManager.sendCommand("BLOCK")) {
-                runOnUiThread {
-                    preferencesManager.isBlocked = true
-                    updateUI()
-                    val messageWithHeader = "Alert: $selectedOption"
-                    readTxtField(messageWithHeader) { success ->
+    private fun sendBlockCommand(selectedOption: String) {
+        if (isBound) {
+            if (bluetoothService.sendCommand("BLOCK")) {
+                preferencesManager.isBlocked = true
+                updateUI()
+                val messageWithHeader = "Alerta: $selectedOption"
+                readTxtField(messageWithHeader) { success ->
+                    runOnUiThread {
                         showSaveResult(success)
+                        Toast.makeText(this, "Comando de bloqueo enviado al Arduino y registrado en Firestore", Toast.LENGTH_SHORT).show()
                     }
                     Toast.makeText(this, (getString(R.string.lock_positive)), Toast.LENGTH_SHORT).show()
                 }
@@ -95,39 +123,39 @@ class BloquearActivity : AppCompatActivity() {
                     Toast.makeText(this, (getString(R.string.lock_negative)), Toast.LENGTH_SHORT).show()
                 }
             }
-        }.start()
+        } else {
+            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun sendUnblockCommandToArduino() {
-        Thread {
-            if (bluetoothManager.sendCommand("UNBLOCK")) {
-                runOnUiThread {
-                    preferencesManager.isBlocked = false
-                    updateUI()
-                    Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
-                }
+        if (isBound) {
+            if (bluetoothService.sendCommand("UNBLOCK")) {
+                preferencesManager.isBlocked = false
+                updateUI()
+                Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
             } else {
-                runOnUiThread {
-                    Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
             }
-        }.start()
+        } else {
+            Toast.makeText(this, (getString(R.string.unlock_positive)), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
         val data = hashMapOf(
             "text" to textF,
-            "hora" to com.google.firebase.Timestamp(Date())
+            "hora" to com.google.firebase.Timestamp(Date()),
         )
 
         db.collection("alertas")
             .add(data)
             .addOnSuccessListener { documentReference ->
-                Log.d("BloquearActivity", "DocumentSnapshot added with ID: ${documentReference.id}")
+                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
                 onComplete(true)
             }
             .addOnFailureListener { e ->
-                Log.w("BloquearActivity", "Error adding document", e)
+                Log.w(TAG, "Error adding document", e)
                 onComplete(false)
             }
     }
