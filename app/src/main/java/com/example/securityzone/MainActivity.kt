@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, getString(R.string.command_negative), Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, (getString(R.string.bluetooth_disconnect_msg)), Toast.LENGTH_SHORT).show()
         }
     }
 
