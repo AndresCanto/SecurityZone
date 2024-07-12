@@ -45,7 +45,7 @@
     <string name="reg_positive">Evento registrado:</string>
     <string name="reg_negative">Error al registrar el evento:</string>
     <string name="all_alerts_btn">Mostrar todas las alertas</string>
-    <string name="choose_date_btn">Elegir la   </string>
+    <string name="choose_date_btn">Elegir la fecha</string>
     <string name="title">Titulo</string>
     <string name="remainder_wrt">Escriba su recordatorio</string>
     <string name="monthly_graphic_title">Grafico Mensual</string>
