@@ -4,9 +4,9 @@
     <string name="status_blocked">Status: Bloqueado</string>
     <string name="status_open">Status: Abierto</string>
     <string name="today_entries">Hoy han entrado %1$d carros</string>
-    <string name="month_entries">Este mes han entrado %1$d carros</string>
+    <string name="month_entries">Este mes han entrado %1$.0f carros</string>
     <string name="today_exits">Hoy han salido %1$d carros</string>
-    <string name="month_exits">Este mes han salido %1$d carros</string>
+    <string name="month_exits">Este mes han salido %1$.0f carros</string>
     <string name="back_button_desc">Regresar</string>
     <string name="unlock">Desbloquear</string>
     <string name="lock">Bloquear</string>

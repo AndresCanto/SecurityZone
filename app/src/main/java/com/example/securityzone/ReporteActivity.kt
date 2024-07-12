@@ -20,19 +20,26 @@ import java.util.Locale
 
 class ReporteActivity : AppCompatActivity() {
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private lateinit var entradasM: TextView
+    private lateinit var salidasM: TextView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         loadLocale()
         setContentView(R.layout.activity_reporte)
+        entradasM = findViewById<TextView>(R.id.entradasMes)
+        salidasM = findViewById<TextView>(R.id.salidasMes)
         fetchCarrosToday()
 
         val backButton: ImageButton = findViewById(R.id.backButton)
         val barChart = findViewById<BarChartView>(R.id.barChart)
-        val values = fetchCarrosMonths()
-        val labels = arrayOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-        val maxValue = 1000
-        barChart.setValues(values, labels, maxValue)
+        fetchCarrosMonths(object : FetchCarrosMonthsCallback {
+            override fun onResult(values: FloatArray) {
+                val labels = arrayOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+                val maxValue = 100
+                barChart.setValues(values, labels, maxValue)
+            }
+        })
         backButton.setOnClickListener {
             finish() // Finaliza la actividad actual y vuelve a la anterior
         }
@@ -57,8 +64,12 @@ class ReporteActivity : AppCompatActivity() {
         cal.set(Calendar.MILLISECOND, 999)
         return cal.time
     }
-    
-    private fun fetchCarrosMonths(): FloatArray {
+
+    private interface FetchCarrosMonthsCallback {
+        fun onResult(values: FloatArray)
+    }
+
+    private fun fetchCarrosMonths(callback: FetchCarrosMonthsCallback) {
         val entradasPorMes = FloatArray(12) { 0.0F }
         db.collection("entradasSalidas")
             .get()
@@ -85,16 +96,19 @@ class ReporteActivity : AppCompatActivity() {
                         }
                     }
                 }
-//                val entradasM: TextView = findViewById(R.id.entradasMes)
-//                entradasM.text = getString(R.string.month_entries,entradasPorMes[6])
-//
-//                val salidasM: TextView = findViewById(R.id.salidasMes)
-//                salidasM.text = getString(R.string.month_exits,entradasPorMes[6])
+
+                try {
+                    entradasM.text = getString(R.string.month_entries, entradasPorMes[6])
+                    salidasM.text = getString(R.string.month_exits, salidasPorMes[6])
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error al asignar texto a TextView", e)
+                }
+
+                callback.onResult(entradasPorMes)
             }
             .addOnFailureListener { exception ->
                 Log.e(TAG, "Error al obtener documentos", exception)
             }
-        return entradasPorMes
     }
 
     private fun fetchCarrosToday() {
@@ -106,8 +120,8 @@ class ReporteActivity : AppCompatActivity() {
                 val endOfDay = getEndOfDay()
 
                 // Contar las entradas y salidas del MES
-                var entradaH = 0
-                var salidaH = 0
+                var entradaH = 1
+                var salidaH = 1
 
                 // Iterar sobre los resultados y contar entradas y salidas para hoy
                 for (document in result) {
