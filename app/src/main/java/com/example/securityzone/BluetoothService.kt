@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -19,9 +20,10 @@ class BluetoothService : Service() {
     private lateinit var bluetoothSocket: BluetoothSocket
     private lateinit var inputStream: InputStream
     private lateinit var outputStream: OutputStream
-    private val deviceAddress: String = "00:22:11:30:EC:81" // Reemplaza con la dirección de tu dispositivo
+    private val deviceAddress: String = "00:22:11:30:EC:81" // Replace with your device address
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
     private val binder = LocalBinder()
+    private var readThread: Thread? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothService = this@BluetoothService
@@ -44,11 +46,35 @@ class BluetoothService : Service() {
                 bluetoothSocket.connect()
                 inputStream = bluetoothSocket.inputStream
                 outputStream = bluetoothSocket.outputStream
+                startReadingData()
             } catch (e: IOException) {
                 Log.e("BluetoothService", "Error connecting to device", e)
                 stopSelf()
             }
         }
+    }
+
+    private fun startReadingData() {
+        readThread = Thread {
+            try {
+                val buffer = ByteArray(1024)
+                var bytes: Int
+
+                while (true) {
+                    bytes = inputStream.read(buffer)
+                    if (bytes > 0) {
+                        val readMessage = String(buffer, 0, bytes)
+                        Log.d("BluetoothService", "Received data: $readMessage")
+                        val intent = Intent("BluetoothDataReceived")
+                        intent.putExtra("data", readMessage)
+                        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+                    }
+                }
+            } catch (e: IOException) {
+                Log.e("BluetoothService", "Error reading from input stream", e)
+            }
+        }
+        readThread?.start()
     }
 
     fun sendCommand(command: String): Boolean {
@@ -65,6 +91,7 @@ class BluetoothService : Service() {
         super.onDestroy()
         try {
             bluetoothSocket.close()
+            readThread?.interrupt()
         } catch (e: IOException) {
             Log.e("BluetoothService", "Error closing socket", e)
         }
