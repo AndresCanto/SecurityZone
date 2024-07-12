@@ -56,18 +56,29 @@ class BluetoothService : Service() {
 
     private fun startReadingData() {
         readThread = Thread {
+            val buffer = ByteArray(1024)
             try {
-                val buffer = ByteArray(1024)
-                var bytes: Int
-
                 while (true) {
-                    bytes = inputStream.read(buffer)
-                    if (bytes > 0) {
-                        val readMessage = String(buffer, 0, bytes)
-                        Log.d("BluetoothService", "Received data: $readMessage")
-                        val intent = Intent("BluetoothDataReceived")
-                        intent.putExtra("data", readMessage)
-                        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+                    val bytesRead = inputStream.read(buffer)
+                    if (bytesRead > 0) {
+                        for (i in 0 until bytesRead) {
+                            val receivedByte = buffer[i].toInt() and 0xFF
+                            Log.d("BluetoothService", "Received raw byte: $receivedByte")
+
+                            val evento = when (receivedByte) {
+                                1 -> "entrada"
+                                2 -> "salida"
+                                else -> {
+                                    Log.w("BluetoothService", "Received unexpected value: $receivedByte")
+                                    continue  // Salta a la siguiente iteración del bucle
+                                }
+                            }
+
+                            Log.d("BluetoothService", "Interpreted event: $evento")
+                            val intent = Intent("BluetoothDataReceived")
+                            intent.putExtra("evento", evento)
+                            LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+                        }
                     }
                 }
             } catch (e: IOException) {

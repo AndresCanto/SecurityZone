@@ -75,5 +75,7 @@
     <string name="bluetooth_disconnected">Bluetooth: Desconectado</string>
     <string name="entrada_detectada">Entrada detectada</string>
     <string name="salida_detectada">Salida detectada</string>
+    <string name="vehicle_count_placeholder">Entradas: 0 | Salidas: 0</string>
+    <string name="vehicle_entries">Entradas: %1$d</string>
 
 </resources>

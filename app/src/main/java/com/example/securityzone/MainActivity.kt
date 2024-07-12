@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
+import android.widget.Button
 import java.util.*
 
 @SuppressLint("StaticFieldLeak")
@@ -29,10 +30,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var statusTextView: TextView
     private lateinit var bluetoothStatusTextView: TextView
+    private lateinit var vehicleCountTextView: TextView
+    private lateinit var manualSalidaBtn: Button
     private var plumaLevantada = false
     private val db = FirebaseFirestore.getInstance()
     private lateinit var bluetoothService: BluetoothService
     private var isBound = false
+    private var localEntradasCount = 0
+    private var localSalidasCount = 0
 
     companion object {
         private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1
@@ -63,6 +68,8 @@ class MainActivity : AppCompatActivity() {
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.textView2)
         bluetoothStatusTextView = findViewById(R.id.bluetoothStatusTextView)
+        vehicleCountTextView = findViewById(R.id.vehicleCountTextView)
+        manualSalidaBtn = findViewById(R.id.manualSalidaBtn) // Referencia al nuevo botón
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -73,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         setupButtonClickListeners()
         setupCountryToggle()
         updateStatusTextView()
+        updateVehicleCount()
 
         updateBluetoothStatus(getString(R.string.bluetooth_connecting))
 
@@ -83,14 +91,43 @@ class MainActivity : AppCompatActivity() {
         requestBluetoothPermissions()
         val filter = IntentFilter("BluetoothDataReceived")
         LocalBroadcastManager.getInstance(this).registerReceiver(bluetoothDataReceiver, filter)
+
+        listenForVehicleChanges()
+
+        manualSalidaBtn.setOnClickListener {
+            Toast.makeText(this, getString(R.string.salida_detectada), Toast.LENGTH_SHORT).show()
+            localSalidasCount++
+            updateVehicleCount()
+            registrarEvento("salida")
+        }
+    }
+
+    private fun manualSalida() {
+        Toast.makeText(this, getString(R.string.salida_detectada), Toast.LENGTH_SHORT).show()
+        localSalidasCount++
+        updateVehicleCount()
+        registrarEvento("salida")
     }
 
     private val bluetoothDataReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val data = intent?.getStringExtra("data")
-            data?.let {
-                Log.d("MainActivity", "Datos recibidos: $it")
-                handleBluetoothData(it)
+            val evento = intent?.getStringExtra("evento")
+            evento?.let {
+                Log.d("MainActivity", "Evento recibido: $it")
+                when (it) {
+                    "entrada" -> {
+                        Toast.makeText(this@MainActivity, getString(R.string.entrada_detectada), Toast.LENGTH_SHORT).show()
+                        localEntradasCount++
+                        updateVehicleCount()
+                        registrarEvento("entrada")
+                    }
+                    "salida" -> {
+                        Toast.makeText(this@MainActivity, getString(R.string.salida_detectada), Toast.LENGTH_SHORT).show()
+                        localSalidasCount++
+                        updateVehicleCount()
+                        registrarEvento("salida")
+                    }
+                }
             }
         }
     }
@@ -220,22 +257,6 @@ class MainActivity : AppCompatActivity() {
         plumaBtn.text = if (plumaLevantada) getString(R.string.pluma_up) else getString(R.string.pluma_down)
     }
 
-    private fun handleBluetoothData(data: String) {
-        when (data.trim().uppercase()) {
-            "E" -> {
-                registrarEvento("entrada")
-                Toast.makeText(this, getString(R.string.entrada_detectada), Toast.LENGTH_SHORT).show()
-            }
-            "S" -> {
-                registrarEvento("salida")
-                Toast.makeText(this, getString(R.string.salida_detectada), Toast.LENGTH_SHORT).show()
-            }
-            else -> {
-                Toast.makeText(this, getString(R.string.unknown) + ": " + data, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     private fun registrarEvento(tipoEvento: String) {
         val entradaSalida = hashMapOf(
             "tipo" to tipoEvento,
@@ -245,11 +266,52 @@ class MainActivity : AppCompatActivity() {
         db.collection("entradasSalidas")
             .add(entradaSalida)
             .addOnSuccessListener { documentReference ->
-                Toast.makeText(this, getString(R.string.reg_positive) + ": " + tipoEvento, Toast.LENGTH_SHORT).show()
+                Log.d("MainActivity", "Evento registrado exitosamente: $tipoEvento")
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, (getString(R.string.reg_negative)) + ": " + e, Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error al registrar evento: $e")
+                runOnUiThread {
+                    Toast.makeText(this, getString(R.string.reg_negative) + ": " + e, Toast.LENGTH_SHORT).show()
+                }
             }
+    }
+
+    private fun listenForVehicleChanges() {
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+
+        db.collection("entradasSalidas")
+            .whereGreaterThanOrEqualTo("hora", Timestamp(today))
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("MainActivity", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    var entradasCount = 0
+                    var salidasCount = 0
+
+                    for (doc in snapshot.documents) {
+                        when (doc.getString("tipo")) {
+                            "entrada" -> entradasCount++
+                            "salida" -> salidasCount++
+                        }
+                    }
+
+                    localEntradasCount = entradasCount
+                    localSalidasCount = salidasCount
+                    updateVehicleCount()
+                }
+            }
+    }
+
+    private fun updateVehicleCount() {
+        vehicleCountTextView.text = "Entradas: $localEntradasCount | Salidas: $localSalidasCount"
     }
 
     override fun onResume() {
