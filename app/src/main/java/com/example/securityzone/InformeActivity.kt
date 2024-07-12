@@ -8,16 +8,14 @@ import android.widget.Button
 import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 import android.content.Context
 import android.content.res.Configuration
+import android.icu.text.SimpleDateFormat
 import android.util.Log
 import android.widget.TextView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -34,8 +32,8 @@ class InformeActivity : AppCompatActivity() {
 
         datePickerButton = findViewById(R.id.datePickerButton2)
 
-        fetchAlerts()
-        fetchCarsToday(getStartOfDay())
+        fetchAlerts(Timestamp.now().toDate())
+        fetchCarsToday(Timestamp.now().toDate())
         setupButtonClickListeners()
     }
 
@@ -49,6 +47,7 @@ class InformeActivity : AppCompatActivity() {
                         set(year, month, dayOfMonth)
                     }
                     fetchCarsToday(selectedDate.time)
+                    fetchAlerts(selectedDate.time)
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -57,21 +56,23 @@ class InformeActivity : AppCompatActivity() {
         }
     }
 
-    private fun getStartOfDay(): Date {
-        val cal = android.icu.util.Calendar.getInstance()
-        cal.set(android.icu.util.Calendar.HOUR_OF_DAY, 0)
-        cal.set(android.icu.util.Calendar.MINUTE, 0)
-        cal.set(android.icu.util.Calendar.SECOND, 0)
-        cal.set(android.icu.util.Calendar.MILLISECOND, 0)
+    private fun getStartOfDay(t: Date= Timestamp.now().toDate()): Date {
+        val cal = Calendar.getInstance()
+        cal.time = t
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
         return cal.time
     }
 
-    private fun getEndOfDay(): Date {
-        val cal = android.icu.util.Calendar.getInstance()
-        cal.set(android.icu.util.Calendar.HOUR_OF_DAY, 23)
-        cal.set(android.icu.util.Calendar.MINUTE, 59)
-        cal.set(android.icu.util.Calendar.SECOND, 59)
-        cal.set(android.icu.util.Calendar.MILLISECOND, 999)
+    private fun getEndOfDay(t: Date= Timestamp.now().toDate()): Date {
+        val cal = Calendar.getInstance()
+        cal.time = t
+        cal.set(Calendar.HOUR_OF_DAY, 23)
+        cal.set(Calendar.MINUTE, 59)
+        cal.set(Calendar.SECOND, 59)
+        cal.set(Calendar.MILLISECOND, 999)
         return cal.time
     }
 
@@ -80,8 +81,8 @@ class InformeActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 // Obtener la fecha de hoy
-//                val startOfDay = getStartOfDay()
-//                val endOfDay = getEndOfDay()
+                val startOfDay = getStartOfDay(time)
+                val endOfDay = getEndOfDay(time)
 
                 // Contar las entradas y salidas del MES
                 var entradaH = 0
@@ -92,7 +93,7 @@ class InformeActivity : AppCompatActivity() {
                     val timestamp = document.getTimestamp("hora")
                     if (timestamp != null) {
                         val date = timestamp.toDate()
-                        if (date.after(time) && date.before(time)) {
+                        if (date.after(startOfDay) && date.before(endOfDay)) {
                             val tipo = document.getString("tipo")
                             if (tipo != null) {
                                 if (tipo == "entrada") {
@@ -109,18 +110,19 @@ class InformeActivity : AppCompatActivity() {
                 val carros: TextView = findViewById(R.id.carros)
                 carros.text = getString(R.string.current_entries, entradaH)
                 val pickDate: TextView = findViewById(R.id.datePickerButton2)
-                pickDate.text = time.toString()
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                pickDate.text = sdf.format(time)
             }
     }
 
-    private fun fetchAlerts() {
+    private fun fetchAlerts(time: Date) {
         db.collection("alertas")
             .whereEqualTo("msj", false)
             .get()
             .addOnSuccessListener { result ->
                 // Obtener la fecha de hoy
-                val startOfDay = getStartOfDay()
-                val endOfDay = getEndOfDay()
+                val startOfDay = getStartOfDay(time)
+                val endOfDay = getEndOfDay(time)
 
                 var alertas = 0
                 for (document in result) {
