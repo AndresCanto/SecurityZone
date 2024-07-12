@@ -2,11 +2,11 @@ package com.example.securityzone
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -24,13 +24,29 @@ object AppContext {
 class MainActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var statusTextView: TextView
-    private lateinit var bluetoothManager: BluetoothManager
+    private lateinit var bluetoothStatusTextView: TextView
     private var spanish = true
     private var plumaLevantada = false
     private val db = FirebaseFirestore.getInstance()
+    private lateinit var bluetoothService: BluetoothService
+    private var isBound = false
 
     companion object {
         private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1
+    }
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as BluetoothService.LocalBinder
+            bluetoothService = binder.getService()
+            isBound = true
+            updateBluetoothStatus(getString(R.string.bluetooth_connected))
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isBound = false
+            updateBluetoothStatus(getString(R.string.bluetooth_disconnected))
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +59,7 @@ class MainActivity : AppCompatActivity() {
 
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.textView2)
+        bluetoothStatusTextView = findViewById(R.id.bluetoothStatusTextView)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -54,9 +71,21 @@ class MainActivity : AppCompatActivity() {
         setupCountryToggle()
         updateStatusTextView()
 
-        bluetoothManager = (application as MyApplication).bluetoothManager
+        // Set initial Bluetooth status
+        updateBluetoothStatus(getString(R.string.bluetooth_connecting))
+
+        // Bind to BluetoothService
+        Intent(this, BluetoothService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+
         requestBluetoothPermissions()
-        connectBluetooth()
+    }
+
+    private fun updateBluetoothStatus(status: String) {
+        runOnUiThread {
+            bluetoothStatusTextView.text = status
+        }
     }
 
     private fun setLocale(context: Context, language: String) {
@@ -149,43 +178,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun connectBluetooth() {
-        if (!bluetoothManager.isConnected()) {
-            Thread {
-                if (bluetoothManager.connect()) {
-                    runOnUiThread {
-                        Toast.makeText(this, "Conectado al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
-                        bluetoothManager.setDataReceivedListener { data ->
-                            runOnUiThread {
-                                handleBluetoothData(data)
-                            }
-                        }
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(this, "No se pudo conectar al dispositivo Bluetooth", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }.start()
-        }
-    }
-
-
     private fun togglePluma() {
         plumaLevantada = !plumaLevantada
         val command = if (plumaLevantada) "PLUMA_UP" else "PLUMA_DOWN"
-        Thread {
-            if (bluetoothManager.sendCommand(command)) {
-                runOnUiThread {
-                    updatePlumaButtonText()
-                    Toast.makeText(this, "Comando enviado: $command", Toast.LENGTH_SHORT).show()
-                }
+        if (isBound) {
+            if (bluetoothService.sendCommand(command)) {
+                updatePlumaButtonText()
+                Toast.makeText(this, "Comando enviado: $command", Toast.LENGTH_SHORT).show()
             } else {
-                runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, "Error al enviar el comando", Toast.LENGTH_SHORT).show()
             }
-        }.start()
+        } else {
+            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun updatePlumaButtonText() {
@@ -222,13 +227,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatusTextView()
-        if (!bluetoothManager.isConnected()) {
-            connectBluetooth()
-        }
     }
 
-    override fun onPause() {
-        super.onPause()
-        bluetoothManager.close()
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBound) {
+            unbindService(connection)
+            isBound = false
+        }
     }
 }

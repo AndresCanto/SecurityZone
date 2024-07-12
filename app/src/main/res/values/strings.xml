@@ -20,4 +20,9 @@
     <string name="toggle_pluma" translatable="false">Toggle Pluma</string>
     <string name="pluma_up">Bajar Pluma</string>
     <string name="pluma_down">Levantar Pluma</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="bluetooth_connecting">Bluetooth: Connecting...</string>
+    <string name="bluetooth_connected">Bluetooth: Connected</string>
+    <string name="bluetooth_disconnected">Bluetooth: Disconnected</string>
 </resources>

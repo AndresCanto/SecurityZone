@@ -1,9 +1,10 @@
 package com.example.securityzone
 
+import android.content.*
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
@@ -19,7 +20,20 @@ class BloquearActivity : AppCompatActivity() {
     private lateinit var bloquearButton: Button
     private lateinit var desbloquearButton: Button
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private lateinit var bluetoothManager: BluetoothManager
+    private lateinit var bluetoothService: BluetoothService
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as BluetoothService.LocalBinder
+            bluetoothService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +41,6 @@ class BloquearActivity : AppCompatActivity() {
         loadLocale()
         setContentView(R.layout.activity_bloquear)
 
-        bluetoothManager = (application as MyApplication).bluetoothManager
         preferencesManager = PreferencesManager(this)
         statusTextView = findViewById(R.id.statusTextView)
         bloquearButton = findViewById(R.id.button2)
@@ -35,6 +48,19 @@ class BloquearActivity : AppCompatActivity() {
 
         setupButtonClickListeners()
         updateUI()
+
+        // Bind to BluetoothService
+        Intent(this, BluetoothService::class.java).also { intent ->
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
     }
 
     private fun setupButtonClickListeners() {
@@ -67,7 +93,6 @@ class BloquearActivity : AppCompatActivity() {
                     else -> ""
                 }
                 if (selectedOption.isNotEmpty()) {
-                    // Enviar bloqueo por Bluetooth y guardar en Firestore
                     sendBlockCommand(selectedOption)
                 } else {
                     showSaveResult(false)
@@ -81,14 +106,13 @@ class BloquearActivity : AppCompatActivity() {
     }
 
     private fun sendBlockCommand(selectedOption: String) {
-        Thread {
-            if (bluetoothManager.sendCommand("BLOCK")) {
-                // Enviar a Firestore sin esperar confirmación de Bluetooth
+        if (isBound) {
+            if (bluetoothService.sendCommand("BLOCK")) {
+                preferencesManager.isBlocked = true
+                updateUI()
                 val messageWithHeader = "Alerta: $selectedOption"
                 readTxtField(messageWithHeader) { success ->
                     runOnUiThread {
-                        preferencesManager.isBlocked = true
-                        updateUI()
                         showSaveResult(success)
                         Toast.makeText(this, "Comando de bloqueo enviado al Arduino y registrado en Firestore", Toast.LENGTH_SHORT).show()
                     }
@@ -98,23 +122,23 @@ class BloquearActivity : AppCompatActivity() {
                     Toast.makeText(this, "Error al enviar el comando de bloqueo por Bluetooth", Toast.LENGTH_SHORT).show()
                 }
             }
-        }.start()
+        } else {
+            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun sendUnblockCommandToArduino() {
-        Thread {
-            if (bluetoothManager.sendCommand("UNBLOCK")) {
-                runOnUiThread {
-                    preferencesManager.isBlocked = false
-                    updateUI()
-                    Toast.makeText(this, "Comando de desbloqueo enviado al Arduino", Toast.LENGTH_SHORT).show()
-                }
+        if (isBound) {
+            if (bluetoothService.sendCommand("UNBLOCK")) {
+                preferencesManager.isBlocked = false
+                updateUI()
+                Toast.makeText(this, "Comando de desbloqueo enviado al Arduino y estado actualizado", Toast.LENGTH_SHORT).show()
             } else {
-                runOnUiThread {
-                    Toast.makeText(this, "Error al enviar el comando de desbloqueo por Bluetooth", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, "Error al enviar el comando de desbloqueo por Bluetooth", Toast.LENGTH_SHORT).show()
             }
-        }.start()
+        } else {
+            Toast.makeText(this, "Servicio Bluetooth no conectado", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun readTxtField(textF: String, onComplete: (Boolean) -> Unit) {
@@ -152,7 +176,7 @@ class BloquearActivity : AppCompatActivity() {
 
     private fun updateUI() {
         if (preferencesManager.isBlocked) {
-            statusTextView.text = "Status: Bloqueado"
+            statusTextView.text = "Status: Cerrado"
             statusTextView.setBackgroundColor(resources.getColor(R.color.red, theme))
             bloquearButton.isVisible = false
             desbloquearButton.isVisible = true
