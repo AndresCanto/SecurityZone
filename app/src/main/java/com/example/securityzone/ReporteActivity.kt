@@ -29,11 +29,11 @@ class ReporteActivity : AppCompatActivity() {
         setContentView(R.layout.activity_reporte)
         entradasM = findViewById<TextView>(R.id.entradasMes)
         salidasM = findViewById<TextView>(R.id.salidasMes)
-        fetchCarrosToday()
+        fetchCarsToday()
 
         val backButton: ImageButton = findViewById(R.id.backButton)
         val barChart = findViewById<BarChartView>(R.id.barChart)
-        fetchCarrosMonths(object : FetchCarrosMonthsCallback {
+        fetchCarsMonths(object : FetchCarsMonthsCallback {
             override fun onResult(values: FloatArray) {
                 val labels = arrayOf((getString(R.string.m1)), (getString(R.string.m2)), (getString(R.string.m3)),
                     (getString(R.string.m4)), (getString(R.string.m5)), (getString(R.string.m6)), (getString(R.string.m7)),
@@ -43,9 +43,6 @@ class ReporteActivity : AppCompatActivity() {
                 barChart.setValues(values, labels, maxValue)
             }
         })
-        backButton.setOnClickListener {
-            finish() // Finaliza la actividad actual y vuelve a la anterior
-        }
 
         setupButtonClickListeners()
     }
@@ -68,11 +65,11 @@ class ReporteActivity : AppCompatActivity() {
         return cal.time
     }
 
-    private interface FetchCarrosMonthsCallback {
+    private interface FetchCarsMonthsCallback {
         fun onResult(values: FloatArray)
     }
 
-    private fun fetchCarrosMonths(callback: FetchCarrosMonthsCallback) {
+    private fun fetchCarsMonths(callback: FetchCarsMonthsCallback) {
         val entradasPorMes = FloatArray(12) { 0.0F }
         db.collection("entradasSalidas")
             .get()
@@ -114,7 +111,7 @@ class ReporteActivity : AppCompatActivity() {
             }
     }
 
-    private fun fetchCarrosToday() {
+    private fun fetchCarsToday() {
         db.collection("entradasSalidas")
             .get()
             .addOnSuccessListener { result ->
