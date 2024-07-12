@@ -1,5 +1,6 @@
 package com.example.securityzone
 
+import android.app.DatePickerDialog
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
@@ -23,14 +24,37 @@ import java.util.Locale
 
 class InformeActivity : AppCompatActivity() {
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private lateinit var datePickerButton: Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         loadLocale()
         setContentView(R.layout.activity_informe)
+
+        datePickerButton = findViewById(R.id.datePickerButton2)
+
         fetchAlerts()
-        fetchCarrosToday()
+        fetchCarsToday(getStartOfDay())
         setupButtonClickListeners()
+    }
+
+    private fun setupDatePicker() {
+        datePickerButton.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(
+                this,
+                { _, year, month, dayOfMonth ->
+                    val selectedDate = Calendar.getInstance().apply {
+                        set(year, month, dayOfMonth)
+                    }
+                    fetchCarsToday(selectedDate.time)
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
     }
 
     private fun getStartOfDay(): Date {
@@ -51,13 +75,13 @@ class InformeActivity : AppCompatActivity() {
         return cal.time
     }
 
-    private fun fetchCarrosToday() {
+    private fun fetchCarsToday(time: Date) {
         db.collection("entradasSalidas")
             .get()
             .addOnSuccessListener { result ->
                 // Obtener la fecha de hoy
-                val startOfDay = getStartOfDay()
-                val endOfDay = getEndOfDay()
+//                val startOfDay = getStartOfDay()
+//                val endOfDay = getEndOfDay()
 
                 // Contar las entradas y salidas del MES
                 var entradaH = 0
@@ -68,7 +92,7 @@ class InformeActivity : AppCompatActivity() {
                     val timestamp = document.getTimestamp("hora")
                     if (timestamp != null) {
                         val date = timestamp.toDate()
-                        if (date.after(startOfDay) && date.before(endOfDay)) {
+                        if (date.after(time) && date.before(time)) {
                             val tipo = document.getString("tipo")
                             if (tipo != null) {
                                 if (tipo == "entrada") {
@@ -84,6 +108,8 @@ class InformeActivity : AppCompatActivity() {
                 // Actualizar los TextViews con los contadores
                 val carros: TextView = findViewById(R.id.carros)
                 carros.text = getString(R.string.current_entries, entradaH)
+                val pickDate: TextView = findViewById(R.id.datePickerButton2)
+                pickDate.text = time.toString()
             }
     }
 
@@ -144,5 +170,6 @@ class InformeActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             finish()
         }
+        setupDatePicker()
     }
 }
